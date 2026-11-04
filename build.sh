@@ -23,8 +23,8 @@ fetch "$MALIIT_GTK" "$UBUNTU/maliit-inputcontext-gtk" "$MALIIT_GTK_SHA"
 
 rm -rf build/click
 mkdir -p build/click
-cp -r manifest.json office.apparmor LICENSE NOTICE apps bin icons installer profile share build/click/
-rm -rf build/click/installer/__pycache__
+cp -r manifest.json office.apparmor libreoffice.content-hub LICENSE NOTICE apps bin icons installer profile share start build/click/
+rm -rf build/click/installer/__pycache__ build/click/start/__pycache__
 
 docker run --rm -u "$(id -u):$(id -g)" -v "$PWD:/src" -w /src "$IMAGE" sh -euc '
   lib=build/click/lib

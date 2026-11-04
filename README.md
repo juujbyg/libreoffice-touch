@@ -34,11 +34,19 @@ trademarks. The LibreOffice program is installed unmodified, exactly as The Docu
 - **On-screen keyboard:** Lomiri's keyboard works through the Maliit GTK input module (`lib/`, from
   Ubuntu's archive).
 
-The app is **unconfined**. LibreOffice opens and saves documents anywhere in your home folder through its
-own file dialogs, and a confined app can only see its own folders. Besides that, the app has no
-special needs: no daemon, no root and no system changes. It downloads one file from The Document
-Foundation, pinned by SHA-256, and loads a small dialog shim (`native/noparent.c`) with `LD_PRELOAD`
-into LibreOffice only.
+The app is **confined**, like any normal store app, so LibreOffice only sees the app's own folders. Files
+get in and out through Ubuntu Touch's Content Hub:
+- The **LibreOffice** app (the start screen, `start/`) has buttons for new documents and lists the
+  documents in `~/.local/share/libreoffice.juujbyg/Documents`. Tap a document to open it. Swipe it left to
+  **Send** it (mail, messaging, printing), **Save to…** another app (such as the file manager), or delete it.
+- **Open from…** at the top picks a document from another app. **Share** in another app (File Manager,
+  Document Viewer, Downloads) can also send a file to LibreOffice. Either way, the file is copied into
+  LibreOffice's folder and opened.
+- LibreOffice's own Open and Save dialogs start in that folder.
+
+The sandbox doesn't allow `/tmp`, dconf or programs from `/usr/bin`. So the launcher only uses shell
+built-ins and a small bundled helper (`native/office-util.c`), and the shim moves LibreOffice's
+single-instance socket into the app's runtime folder.
 
 ## Settings
 
@@ -53,6 +61,7 @@ Environment variables for `bin/office`:
 ```sh
 ./build.sh            # needs Docker; writes build/libreoffice.juujbyg_<version>_arm64.click
 python3 -I tests/installer_check.py   # installer logic with a fake archive, no network
+python3 -I tests/hub_check.py         # start screen backend
 ```
 
 `build.sh` cross-compiles the shim in the `clickable/amd64-ut24.04-1.x-arm64` image. It downloads the two
@@ -62,7 +71,6 @@ scripts used to test on a phone over SSH (screenshots of each app, first launch,
 ## Known limits
 
 - Base starts slowly: about 45 s to its wizard on a Pixel 3a.
-- Content Hub sharing isn't wired up. Open files from LibreOffice's own file picker.
 - Each app keeps LibreOffice's desktop menus and toolbars, made larger. This isn't a touch-first redesign.
 
 ## Licence

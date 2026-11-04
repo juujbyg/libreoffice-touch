@@ -42,6 +42,15 @@ fresh=0
 if [ ! -d "$PROFILE/user" ]; then
   "$UTIL" copy "$APP_DIR/profile" "$PROFILE/user"
   fresh=1
+  # LibreOffice's Open and Save dialogs start in the documents folder, which the start screen
+  # lists. The path depends on the user, so it is added here (with shell built-ins only).
+  xcu="$PROFILE/user/registrymodifications.xcu"
+  work="<item oor:path=\"/org.openoffice.Office.Paths/Paths/org.openoffice.Office.Paths:NamedPath['Work']\"><prop oor:name=\"WritePath\" oor:op=\"fuse\"><value>file://$DOCS</value></prop></item>"
+  seeded=$(while IFS= read -r line; do
+    case "$line" in *'</oor:items>'*) printf '%s\n' "$work";; esac
+    printf '%s\n' "$line"
+  done < "$xcu")
+  printf '%s\n' "$seeded" > "$xcu"
 fi
 
 export LD_LIBRARY_PATH="$PROG:$APP_DIR/lib"

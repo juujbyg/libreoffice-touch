@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=LibreOffice
+Comment=Your documents, new documents, and files shared from other apps
+Exec=qmlscene %U start/Main.qml
+Icon=icons/startcenter.svg
+Terminal=false
+Type=Application
+X-Lomiri-Touch=true

@@ -1,0 +1,5 @@
+{
+    "destination": ["documents", "text"],
+    "source": ["documents", "text"],
+    "share": ["documents", "text"]
+}

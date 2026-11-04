@@ -2,11 +2,16 @@
     "name": "libreoffice.juujbyg",
     "title": "LibreOffice",
     "description": "LibreOffice for Ubuntu Touch (unofficial port), sized for the phone",
-    "version": "0.1.1",
+    "version": "0.2.0",
     "architecture": "arm64",
     "framework": "ubuntu-touch-24.04-1.x",
     "maintainer": "juujbyg <147175691+juujbyg@users.noreply.github.com>",
     "hooks": {
+        "libreoffice": {
+            "apparmor": "office.apparmor",
+            "desktop": "apps/libreoffice.desktop",
+            "content-hub": "libreoffice.content-hub"
+        },
         "writer": {
             "apparmor": "office.apparmor",
             "desktop": "apps/writer.desktop"
