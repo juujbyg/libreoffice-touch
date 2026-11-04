@@ -1,5 +1,5 @@
 #!/bin/sh
-# Builds office.juujbyg_<version>_arm64.click in build/.
+# Builds libreoffice.juujbyg_<version>_arm64.click in build/.
 # Needs Docker (the clickable 24.04 arm64 image has the cross compiler and click).
 # LibreOffice itself isn't in the click: the app downloads it from The Document Foundation
 # on first use (installer/).

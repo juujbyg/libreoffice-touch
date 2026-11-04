@@ -1,17 +1,21 @@
-Office Suite for Ubuntu Touch
+LibreOffice for Ubuntu Touch (unofficial port)
 Copyright (C) 2026 juujbyg
-This app's own files (launcher, installer, dialog shim, theme, profile, icons) are under the
+This port's own files (launcher, installer, dialog shim, theme, profile) are under the
 GNU General Public License v3, see LICENSE.
 
-Not made by or affiliated with The Document Foundation. "LibreOffice" is a trademark of
-The Document Foundation and is used here only to say what the app installs.
+An unofficial port, not made by The Document Foundation. "LibreOffice" and its logos are
+trademarks of The Document Foundation. The LibreOffice program itself is installed unmodified,
+as published by The Document Foundation.
+
+Icons (icons/): LibreOffice's own application icons, unmodified, from the
+libreoffice26.8-debian-menus package of the same release, Mozilla Public License 2.0.
 
 Downloaded on first use, not included in the package:
   LibreOffice 26.8.2 for Linux aarch64 (Debian packages), (C) The Document Foundation and
   contributors, Mozilla Public License 2.0, from
   https://downloadarchive.documentfoundation.org/libreoffice/old/26.8.2.2/deb/aarch64/
   Its own licence files are installed with it under
-  ~/.local/share/office.juujbyg/libreoffice/opt/libreoffice26.8/
+  ~/.local/share/libreoffice.juujbyg/libreoffice/opt/libreoffice26.8/
 
 Included in the package (lib/), unmodified, from Ubuntu's archive:
   libmaliit-glib (maliit-framework 2.3.0) and im-maliit.so (maliit-inputcontext-gtk

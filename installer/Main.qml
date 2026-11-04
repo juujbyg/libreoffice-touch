@@ -8,7 +8,7 @@ import io.thp.pyotherside 1.4
 
 MainView {
     id: root
-    applicationName: 'office.juujbyg'
+    applicationName: 'libreoffice.juujbyg'
     automaticOrientation: true
     width: units.gu(45)
     height: units.gu(75)
@@ -71,7 +71,7 @@ MainView {
 
             Image {
                 Layout.alignment: Qt.AlignHCenter
-                source: '../icons/writer.svg'
+                source: '../icons/main.svg'
                 sourceSize.width: units.gu(12)
                 sourceSize.height: units.gu(12)
             }
@@ -79,7 +79,7 @@ MainView {
             Label {
                 Layout.fillWidth: true
                 horizontalAlignment: Text.AlignHCenter
-                text: root.stage === 'done' ? 'Ready' : 'Office Suite'
+                text: root.stage === 'done' ? 'Ready' : 'LibreOffice'
                 textSize: Label.XLarge
                 font.weight: Font.Medium
                 color: '#1f2430'
@@ -90,9 +90,9 @@ MainView {
                 visible: root.stage === 'ask'
                 wrapMode: Text.WordWrap
                 color: '#3a3f4b'
-                text: 'Documents, spreadsheets, slides, drawings, formulas and databases, '
-                      + 'powered by LibreOffice.\n\n'
-                      + 'LibreOffice isn\'t part of this download. On first use the app fetches '
+                text: 'Writer, Calc, Impress, Draw, Math and Base, as an unofficial '
+                      + 'port for Ubuntu Touch.\n\n'
+                      + 'LibreOffice itself isn\'t part of this download. On first use the app fetches '
                       + 'the official LibreOffice 26.8.2 for arm64 from The Document Foundation '
                       + '(downloadarchive.documentfoundation.org), checks it against a fixed '
                       + 'SHA-256 and unpacks it into the app\'s own folder.\n\n'

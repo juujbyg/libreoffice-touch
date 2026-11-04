@@ -7,9 +7,9 @@ would), and checks that LibreOffice opens while the screen is still up and survi
 Screens go to /tmp/fr-<n>.raw. Log on stdout. Keeps the display on meanwhile."""
 import os, subprocess, time, dbus
 
-APP = "office.juujbyg_writer_0.1.0"
-DATA = "/home/phablet/.local/share/office.juujbyg"
-CLICK = "/opt/click.ubuntu.com/office.juujbyg/current"
+APP = "libreoffice.juujbyg_writer_0.1.0"
+DATA = "/home/phablet/.local/share/libreoffice.juujbyg"
+CLICK = "/opt/click.ubuntu.com/libreoffice.juujbyg/current"
 ENV = "export XDG_RUNTIME_DIR=/run/user/32011 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/32011/bus"
 scr = dbus.Interface(dbus.SystemBus().get_object('com.canonical.Unity.Screen', '/com/canonical/Unity/Screen'),
                      'com.canonical.Unity.Screen')

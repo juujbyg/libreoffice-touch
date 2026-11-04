@@ -1,11 +1,11 @@
 #!/bin/sh
-# Office Suite for Ubuntu Touch: runs the official LibreOffice (GTK3, native Wayland on Lomiri),
+# LibreOffice for Ubuntu Touch (unofficial port): runs the official LibreOffice (GTK3, native Wayland on Lomiri),
 # downloaded on first use, with a phone-sized interface.
 # Usage: office [writer|calc|impress|draw|math|base] [file or URI...]
 #
 # Sizing: LO_DPI (LibreOffice's own drawing: toolbars, document, status bar; 96 = desktop) and
 # LO_TEXT_SCALE (text in menus and dialogs). GDK_SCALE has no effect on Lomiri.
-ID=office.juujbyg
+ID=libreoffice.juujbyg
 APP_DIR=$(cd "$(dirname "$0")/.." && pwd)
 DATA="${XDG_DATA_HOME:-$HOME/.local/share}/$ID"
 PROFILE="${XDG_CONFIG_HOME:-$HOME/.config}/$ID/profile"

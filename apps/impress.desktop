@@ -1,5 +1,5 @@
 [Desktop Entry]
-Name=Presentations
+Name=LibreOffice Impress
 Comment=Slides and slide shows (.odp, .pptx)
 Exec=bin/office impress %U
 Icon=icons/impress.svg

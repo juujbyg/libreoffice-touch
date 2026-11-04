@@ -1,19 +1,18 @@
-# Office Suite for Ubuntu Touch
+# LibreOffice for Ubuntu Touch (unofficial port)
 
-The full LibreOffice suite (documents, spreadsheets, presentations, drawings, formulas and
-databases) running natively on Ubuntu Touch phones, with an interface sized for fingers.
+The full LibreOffice suite (Writer, Calc, Impress, Draw, Math and Base) running natively on Ubuntu Touch phones, with an interface sized for fingers.
 
-Package `office.juujbyg`, for arm64 phones on Ubuntu Touch 24.04.
+Package `libreoffice.juujbyg`, for arm64 phones on Ubuntu Touch 24.04.
 
-It isn't affiliated with The Document Foundation. "LibreOffice" is their trademark and is used here only
-to say what the app installs.
+This is an unofficial port, not made by The Document Foundation. "LibreOffice" and its logos are their
+trademarks. The LibreOffice program is installed unmodified, exactly as The Document Foundation publishes it.
 
 ## How it works
 
 - **LibreOffice isn't bundled.** The click is under 100 KB. On first launch, a screen offers to download
   the official LibreOffice 26.8.2 for Linux aarch64 from The Document Foundation's archive. The download is
   about 200 MB and takes about 730 MB once installed. It's checked against a fixed SHA-256 and unpacked
-  into `~/.local/share/office.juujbyg/` (`installer/`). Nothing is installed system-wide and no root is
+  into `~/.local/share/libreoffice.juujbyg/` (`installer/`). Nothing is installed system-wide and no root is
   needed. Deleting the app's data removes LibreOffice again.
 - **Native on Lomiri.** LibreOffice runs with its GTK3 interface straight on Mir's Wayland. No Libertine
   container or X server is involved.
@@ -44,12 +43,12 @@ Environment variables for `bin/office`:
 - `LO_DPI`: LibreOffice's drawing size (default 192; 96 is desktop size).
 - `LO_TEXT_SCALE`: text size in menus and dialogs (default 1.8).
 - `LO_GTK_THEME`: the GTK theme.
-- `LO_SHIM_DEBUG=1`: logs the dialog shim's decisions to `~/.cache/office.juujbyg/last.log`.
+- `LO_SHIM_DEBUG=1`: logs the dialog shim's decisions to `~/.cache/libreoffice.juujbyg/last.log`.
 
 ## Building
 
 ```sh
-./build.sh            # needs Docker; writes build/office.juujbyg_<version>_arm64.click
+./build.sh            # needs Docker; writes build/libreoffice.juujbyg_<version>_arm64.click
 python3 -I tests/installer_check.py   # installer logic with a fake archive, no network
 ```
 

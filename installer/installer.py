@@ -32,7 +32,7 @@ NEEDED_MB = 1200
 CHUNK = 1 << 20
 # Parts that need Java or KDE, or update LibreOffice behind the store's back.
 SKIP = ("kde-integration", "onlineupdate", "report-builder", "nlpsolver")
-USER_AGENT = "OfficeSuite-UbuntuTouch/0.1 (+https://github.com/juujbyg/office-suite-touch)"
+USER_AGENT = "LibreOffice-UbuntuTouch-port/0.1 (+https://github.com/juujbyg/libreoffice-touch)"
 
 
 class InstallError(Exception):
@@ -47,7 +47,7 @@ def _send(*args):
 
 
 def _data():
-    return os.environ.get("OFFICE_DATA") or os.path.expanduser("~/.local/share/office.juujbyg")
+    return os.environ.get("OFFICE_DATA") or os.path.expanduser("~/.local/share/libreoffice.juujbyg")
 
 
 def installed(data=None):

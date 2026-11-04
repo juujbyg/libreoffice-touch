@@ -1,5 +1,5 @@
 [Desktop Entry]
-Name=Databases
+Name=LibreOffice Base
 Comment=Databases and forms
 Exec=bin/office base %U
 Icon=icons/base.svg

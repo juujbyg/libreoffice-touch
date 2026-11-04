@@ -1,5 +1,5 @@
 [Desktop Entry]
-Name=Documents
+Name=LibreOffice Writer
 Comment=Write letters, reports and other text documents (.odt, .docx)
 Exec=bin/office writer %U
 Icon=icons/writer.svg

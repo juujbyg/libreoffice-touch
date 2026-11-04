@@ -1,5 +1,5 @@
 [Desktop Entry]
-Name=Formulas
+Name=LibreOffice Math
 Comment=Mathematical formulas
 Exec=bin/office math %U
 Icon=icons/math.svg

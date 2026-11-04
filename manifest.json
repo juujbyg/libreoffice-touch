@@ -1,7 +1,7 @@
 {
-    "name": "office.juujbyg",
-    "title": "Office Suite",
-    "description": "LibreOffice for Ubuntu Touch, sized for the phone",
+    "name": "libreoffice.juujbyg",
+    "title": "LibreOffice",
+    "description": "LibreOffice for Ubuntu Touch (unofficial port), sized for the phone",
     "version": "0.1.0",
     "architecture": "arm64",
     "framework": "ubuntu-touch-24.04-1.x",

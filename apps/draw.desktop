@@ -1,5 +1,5 @@
 [Desktop Entry]
-Name=Drawings
+Name=LibreOffice Draw
 Comment=Diagrams, flyers and PDF editing
 Exec=bin/office draw %U
 Icon=icons/draw.svg

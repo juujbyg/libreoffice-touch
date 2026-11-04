@@ -1,5 +1,5 @@
 [Desktop Entry]
-Name=Spreadsheets
+Name=LibreOffice Calc
 Comment=Tables, sums and charts (.ods, .xlsx, .csv)
 Exec=bin/office calc %U
 Icon=icons/calc.svg
