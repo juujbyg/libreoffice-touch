@@ -1,0 +1,48 @@
+/* LibreTouch: Adwaita with finger-sized controls, for LibreOffice on a phone.
+   Only LibreOffice uses it (GTK_THEME=LibreTouch in ~/.local/bin/lo).
+   Sizes are physical pixels on a 1080 px wide, ~400 ppi screen (16 px is about 1 mm). */
+@import url("resource:///org/gtk/libgtk/theme/Adwaita/gtk-contained.css");
+
+menubar > menuitem { min-height: 56px; padding: 6px 18px; }
+menu menuitem, .menu menuitem, .context-menu menuitem { min-height: 64px; padding: 4px 22px; }
+menu separator { margin: 6px 0; }
+menu arrow { min-width: 24px; min-height: 24px; }
+
+button { min-height: 52px; min-width: 52px; padding: 6px 18px; border-radius: 8px; }
+button.image-button { padding: 6px 10px; }
+dialog .dialog-action-area button, .dialog-action-box button { min-height: 64px; padding: 6px 26px; }
+entry, spinbutton:not(.vertical) { min-height: 56px; padding-left: 12px; padding-right: 12px; }
+spinbutton:not(.vertical) button { min-width: 56px; }
+combobox button, combobox entry { min-height: 52px; }
+
+check, radio { min-width: 32px; min-height: 32px; margin: 0 10px 0 4px; }
+checkbutton, radiobutton { min-height: 52px; padding: 2px 4px; }
+switch { min-width: 96px; min-height: 40px; }
+switch slider { min-width: 40px; min-height: 40px; }
+scale slider { min-width: 36px; min-height: 36px; }
+
+notebook > header tab { min-height: 56px; padding: 4px 22px; }
+notebook > header > tabs > arrow { min-width: 48px; min-height: 48px; }
+
+treeview.view { -GtkTreeView-vertical-separator: 22; -GtkTreeView-expander-size: 32; }
+row { min-height: 52px; }
+
+/* Scrollbars wide enough to grab with a finger, always shown. */
+scrollbar slider { min-width: 18px; min-height: 18px; border-width: 5px; }
+scrollbar.overlay-indicator:not(.dragging):not(.hovering) slider { min-width: 10px; min-height: 10px; }
+
+/* Dialogs as phone sheets (see libnoparent.so): every dialog is a maximised window, opaque
+   because Lomiri shows the wallpaper, not the document, behind it. */
+.lo-sheet.background { background-color: shade(@theme_bg_color, 0.72); }
+.lo-card { background-color: @theme_bg_color; border-radius: 16px; margin: 24px;
+           box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45); padding: 8px; }
+.lo-fill { background-color: @theme_bg_color; }
+
+/* File picker (Open / Save As): Adwaita sizes these rows more specifically than plain `row`. */
+placessidebar row, placessidebar .sidebar-row { min-height: 76px; padding: 0 14px; }
+placessidebar row image { min-width: 32px; min-height: 32px; }
+filechooser treeview.view, filechooser .view { -GtkTreeView-vertical-separator: 36; }
+filechooser pathbar button, .path-bar button { min-height: 60px; padding: 4px 16px; }
+filechooser entry { min-height: 60px; }
+headerbar { min-height: 76px; }
+headerbar button { min-height: 60px; padding: 4px 20px; }

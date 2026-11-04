@@ -1,0 +1,33 @@
+#!/bin/sh
+# LibreOffice 26.8 on Ubuntu Touch: GTK3 plugin as a native Wayland client on Lomiri,
+# with Lomiri's on-screen keyboard through the Maliit GTK input module.
+# Usage: lo [writer|calc|impress|draw|math|base] [file...]
+# Sizing for the phone: LO_DPI (LibreOffice's own drawing: toolbars, document, status bar;
+# 96 = desktop size) and LO_TEXT_SCALE (text in menus and dialogs). GDK_SCALE has no effect here.
+LOHOME="$HOME/apps/libreoffice/opt/libreoffice26.8"
+IM="$HOME/apps/libreoffice/gtk-im"
+export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+export LD_LIBRARY_PATH="$LOHOME/program:$IM/lib"
+export WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-0}" GDK_BACKEND=wayland SAL_USE_VCLPLUGIN=gtk3
+# Base opens with its Database Wizard, which LibreOffice draws itself in a fixed-size window that
+# cannot scroll: at text scale 1.8 it is ~1650 px wide, so Base uses smaller text to fit 1080 px.
+case "$1" in base) text=1.2;; *) text=1.8;; esac
+export SAL_FORCEDPI="${LO_DPI:-192}" GDK_DPI_SCALE="${LO_TEXT_SCALE:-$text}"
+# Finger-sized buttons, menus and scrollbars, and the look of dialog sheets (~/.local/share/themes/LibreTouch).
+export GTK_THEME="${LO_GTK_THEME:-LibreTouch}"
+export GTK_IM_MODULE=Maliit GTK_IM_MODULE_FILE="$IM/immodules.cache"
+# Dialogs as phone sheets: Lomiri opens child windows as if 640x480 and never re-centres them,
+# so libnoparent.so maximises every dialog instead and centres small ones as a card.
+export LD_PRELOAD="$IM/lib/libnoparent.so${LD_PRELOAD:+:$LD_PRELOAD}"
+unset GDK_GL GDK_DEBUG GDK_SCALE
+# No splash screen: Lomiri stops an app whose first window closes before the next one opens,
+# so with the splash it stopped LibreOffice a few seconds after launch. Without it LibreOffice can
+# run inside Lomiri's own launch unit, and Lomiri shows its name and icon instead of "Unknown app".
+case "$1" in writer|calc|impress|draw|math|base) m="--$1"; shift;; *) m="";; esac
+mkdir -p "$HOME/.cache"; { date; env | sort; } > "$HOME/.cache/lo-last.log" 2>&1
+# A fresh profile makes soffice.bin exit with 81 after first-run setup: start it again (the soffice wrapper does this too).
+while :; do
+  "$LOHOME/program/soffice.bin" $m --nologo --norestore -env:UserInstallation="file://$HOME/.config/libreoffice-ut" "$@" 2>>"$HOME/.cache/lo-last.log"
+  rc=$?
+  [ "$rc" -eq 81 ] || exit "$rc"
+done

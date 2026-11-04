@@ -1,0 +1,3 @@
+#!/bin/sh
+# Kept for old shortcuts: the desktop entries now run lo directly (see the note in lo).
+exec "$HOME/.local/bin/lo" "$@"

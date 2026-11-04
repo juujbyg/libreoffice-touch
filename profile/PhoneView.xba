@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE script:module PUBLIC "-//OpenOffice.org//DTD OfficeDocument 1.0//EN" "module.dtd">
+<script:module xmlns:script="http://openoffice.org/2000/script" script:name="PhoneView" script:language="StarBasic" script:moduleType="normal">REM Phone defaults for opened files. Bound to the application&apos;s Open Document event.
+REM Writer documents open at page width, whatever zoom the file was saved with.
+Sub FitWidth(Optional oEvent)
+	On Error Resume Next
+	Dim oDoc As Object
+	If IsMissing(oEvent) Then oDoc = ThisComponent Else oDoc = oEvent.Source
+	If oDoc.supportsService(&quot;com.sun.star.text.TextDocument&quot;) Then
+		oDoc.CurrentController.ViewSettings.ZoomType = com.sun.star.view.DocumentZoomType.PAGE_WIDTH
+	End If
+End Sub
+</script:module>
