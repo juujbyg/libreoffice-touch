@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Spreadsheets
+Comment=Tables, sums and charts (.ods, .xlsx, .csv)
+Exec=bin/office calc %U
+Icon=icons/calc.svg
+Terminal=false
+Type=Application
+X-Lomiri-Touch=true

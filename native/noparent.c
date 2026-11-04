@@ -119,7 +119,10 @@ static void prepare(void *w, int unused) {
     if (get(w, DONE) || !get(w, KEY)) return;
     set(w, DONE, (void *)1);
     Rect a; screen_area(&a);
-    if (a.width <= 0) return;
+    if (a.width <= 0) {
+        if (debug) fprintf(stderr, "lo-shim: %p no screen size yet\n", w);
+        return;
+    }
     void *bar = CALL(gtk, void *, gtk_window_get_titlebar, (void *))(w);
     Req min, nat;
     if (bar) {
@@ -177,6 +180,7 @@ void gtk_window_set_transient_for(void *window, void *parent) {
 static void on_frame_realize(void *w, void *unused);
 static void before_show(void *w) {
     if (!w) return;
+    if (debug < 0) debug = getenv("LO_SHIM_DEBUG") != NULL;
     if (debug > 0 && is_a(w, "gtk_window_get_type") && !get(w, "lo-shim-seen")) {
         set(w, "lo-shim-seen", (void *)1);
         fprintf(stderr, "lo-shim: show %p type %s parent-key %p\n", w,
@@ -203,6 +207,14 @@ void gtk_widget_show(void *w) {
 void gtk_widget_show_all(void *w) {
     static void (*f)(void *); if (!f) f = dlsym(RTLD_NEXT, "gtk_widget_show_all");
     before_show(w); f(w);
+}
+/* Message boxes with no parent (e.g. "Document in Use", asked before the document window exists)
+ * are run with gtk_dialog_run, which shows them inside GTK, out of reach of the hooks above. */
+int gtk_dialog_run(void *w) {
+    static int (*f)(void *); if (!f) f = dlsym(RTLD_NEXT, "gtk_dialog_run");
+    if (debug < 0) debug = getenv("LO_SHIM_DEBUG") != NULL;
+    if (debug) fprintf(stderr, "lo-shim: dialog_run %p\n", w);
+    before_show(w); return f(w);
 }
 void gtk_window_present(void *w) {
     static void (*f)(void *); if (!f) f = dlsym(RTLD_NEXT, "gtk_window_present");

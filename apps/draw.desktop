@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Drawings
+Comment=Diagrams, flyers and PDF editing
+Exec=bin/office draw %U
+Icon=icons/draw.svg
+Terminal=false
+Type=Application
+X-Lomiri-Touch=true

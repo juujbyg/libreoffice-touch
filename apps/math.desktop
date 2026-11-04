@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Formulas
+Comment=Mathematical formulas
+Exec=bin/office math %U
+Icon=icons/math.svg
+Terminal=false
+Type=Application
+X-Lomiri-Touch=true

@@ -1,0 +1,35 @@
+{
+    "name": "office.juujbyg",
+    "title": "Office Suite",
+    "description": "LibreOffice for Ubuntu Touch, sized for the phone",
+    "version": "0.1.0",
+    "architecture": "arm64",
+    "framework": "ubuntu-touch-24.04-1.x",
+    "maintainer": "juujbyg <147175691+juujbyg@users.noreply.github.com>",
+    "hooks": {
+        "writer": {
+            "apparmor": "office.apparmor",
+            "desktop": "apps/writer.desktop"
+        },
+        "calc": {
+            "apparmor": "office.apparmor",
+            "desktop": "apps/calc.desktop"
+        },
+        "impress": {
+            "apparmor": "office.apparmor",
+            "desktop": "apps/impress.desktop"
+        },
+        "draw": {
+            "apparmor": "office.apparmor",
+            "desktop": "apps/draw.desktop"
+        },
+        "math": {
+            "apparmor": "office.apparmor",
+            "desktop": "apps/math.desktop"
+        },
+        "base": {
+            "apparmor": "office.apparmor",
+            "desktop": "apps/base.desktop"
+        }
+    }
+}

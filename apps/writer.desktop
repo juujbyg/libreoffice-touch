@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Documents
+Comment=Write letters, reports and other text documents (.odt, .docx)
+Exec=bin/office writer %U
+Icon=icons/writer.svg
+Terminal=false
+Type=Application
+X-Lomiri-Touch=true

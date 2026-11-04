@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Databases
+Comment=Databases and forms
+Exec=bin/office base %U
+Icon=icons/base.svg
+Terminal=false
+Type=Application
+X-Lomiri-Touch=true

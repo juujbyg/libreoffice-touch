@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Presentations
+Comment=Slides and slide shows (.odp, .pptx)
+Exec=bin/office impress %U
+Icon=icons/impress.svg
+Terminal=false
+Type=Application
+X-Lomiri-Touch=true
