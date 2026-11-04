@@ -34,8 +34,11 @@ trademarks. The LibreOffice program is installed unmodified, exactly as The Docu
 - **On-screen keyboard:** Lomiri's keyboard works through the Maliit GTK input module (`lib/`, from
   Ubuntu's archive).
 
-The app is **unconfined**. LibreOffice has to open and save files anywhere in your home folder and run
-the program it downloaded, which the app sandbox doesn't allow.
+The app is **unconfined**. LibreOffice opens and saves documents anywhere in your home folder through its
+own file dialogs, and a confined app can only see its own folders. Besides that, the app has no
+special needs: no daemon, no root and no system changes. It downloads one file from The Document
+Foundation, pinned by SHA-256, and loads a small dialog shim (`native/noparent.c`) with `LD_PRELOAD`
+into LibreOffice only.
 
 ## Settings
 
