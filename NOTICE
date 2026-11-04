@@ -23,5 +23,5 @@ Included in the package (lib/), unmodified, from Ubuntu's archive:
   Source: http://ports.ubuntu.com/ubuntu-ports/pool/universe/m/maliit-framework/ and
   http://ports.ubuntu.com/ubuntu-ports/pool/universe/m/maliit-inputcontext-gtk/
 
-The theme in share/themes/LibreTouch builds on GTK's Adwaita theme (LGPL-2.1+), which it
+The theme in share/themes/LibreOfficePhone builds on GTK's Adwaita theme (LGPL-2.1+), which it
 loads from the system's GTK library rather than copying.

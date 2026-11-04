@@ -1,5 +1,5 @@
-/* LibreTouch: Adwaita with finger-sized controls, for LibreOffice on a phone.
-   Only LibreOffice uses it (GTK_THEME=LibreTouch in ~/.local/bin/lo).
+/* LibreOfficePhone: Adwaita with finger-sized controls, for LibreOffice on a phone.
+   Only LibreOffice uses it (GTK_THEME=LibreOfficePhone, set by bin/office).
    Sizes are physical pixels on a 1080 px wide, ~400 ppi screen (16 px is about 1 mm). */
 @import url("resource:///org/gtk/libgtk/theme/Adwaita/gtk-contained.css");
 

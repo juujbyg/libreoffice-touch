@@ -19,7 +19,7 @@ trademarks. The LibreOffice program is installed unmodified, exactly as The Docu
 - **Phone-sized interface** (`bin/office`):
   - `SAL_FORCEDPI=192` and `GDK_DPI_SCALE=1.8` give large toolbars, menus and text. Base uses 1.2, because
     its Database Wizard is a fixed-size window that can't scroll.
-  - The `LibreTouch` GTK theme (`share/themes/`) makes buttons, menus, tabs, entries, scrollbars and the
+  - The `LibreOfficePhone` GTK theme (`share/themes/`) makes buttons, menus, tabs, entries, scrollbars and the
     file picker finger-sized.
 - **Dialogs as phone sheets** (`native/noparent.c`, loaded with `LD_PRELOAD`):
   - The problem: Mir places a dialog as if it were 640x480, about 220 px from the left, and never moves it.

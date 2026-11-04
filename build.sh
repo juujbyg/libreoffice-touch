@@ -30,6 +30,7 @@ docker run --rm -u "$(id -u):$(id -g)" -v "$PWD:/src" -w /src "$IMAGE" sh -euc '
   lib=build/click/lib
   mkdir -p $lib/gtk-3.0/immodules build/deb
   aarch64-linux-gnu-gcc -O2 -Wall -shared -fPIC -o $lib/libnoparent.so native/noparent.c -ldl
+  aarch64-linux-gnu-gcc -O2 -Wall -o build/click/bin/office-util native/office-util.c
   for d in build/dl/*.deb; do dpkg-deb -x "$d" build/deb; done
   a=build/deb/usr/lib/aarch64-linux-gnu
   cp -P $a/libmaliit-glib.so.2* $lib/

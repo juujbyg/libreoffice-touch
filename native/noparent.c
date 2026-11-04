@@ -18,12 +18,15 @@
  * Other parentless windows are maximised the same way; if their contents are bigger than the
  * screen (Base's Database Wizard) they scroll with their button row kept visible, and a
  * GtkAssistant's step list is hidden.
- * The look comes from the LibreTouch GTK theme. LO_SHIM_DEBUG=1 logs each decision. */
+ * The look comes from the LibreOfficePhone GTK theme. LO_SHIM_DEBUG=1 logs each decision. */
 #define _GNU_SOURCE
 #include <dlfcn.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <errno.h>
+#include <string.h>
+#include <unistd.h>
 
 typedef struct { int width, height; } Req;
 typedef struct { int x, y, width, height; } Rect;
@@ -208,6 +211,23 @@ void gtk_widget_show_all(void *w) {
     static void (*f)(void *); if (!f) f = dlsym(RTLD_NEXT, "gtk_widget_show_all");
     before_show(w); f(w);
 }
+/* LibreOffice's single-instance socket goes in /tmp, or /var/tmp if /tmp isn't writable, or else in
+ * the folder named by its OSL_SOCKET_PATH setting. Inside the app sandbox both are denied, but
+ * access() only checks file permissions, so LibreOffice would pick /tmp, fail to create the socket and
+ * exit with code 1. With LO_SHIM_PRIVATE_TMP set (by the launcher), both report "not writable" here,
+ * and the socket goes to OSL_SOCKET_PATH (the app's folder in XDG_RUNTIME_DIR). */
+int access(const char *path, int mode) {
+    static int (*f)(const char *, int);
+    static int private_tmp = -1;
+    if (!f) f = dlsym(RTLD_NEXT, "access");
+    if (private_tmp < 0) private_tmp = getenv("LO_SHIM_PRIVATE_TMP") != NULL;
+    if (private_tmp && (mode & W_OK) && (!strcmp(path, "/tmp") || !strcmp(path, "/var/tmp"))) {
+        errno = EACCES;
+        return -1;
+    }
+    return f(path, mode);
+}
+
 /* Message boxes with no parent (e.g. "Document in Use", asked before the document window exists)
  * are run with gtk_dialog_run, which shows them inside GTK, out of reach of the hooks above. */
 int gtk_dialog_run(void *w) {

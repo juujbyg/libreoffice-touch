@@ -1,17 +1,26 @@
 #!/bin/sh
-# LibreOffice for Ubuntu Touch (unofficial port): runs the official LibreOffice (GTK3, native Wayland on Lomiri),
-# downloaded on first use, with a phone-sized interface.
+# LibreOffice for Ubuntu Touch (unofficial port): runs the official LibreOffice (GTK3, native Wayland on
+# Lomiri), downloaded on first use, with a phone-sized interface, inside the app sandbox.
 # Usage: office [writer|calc|impress|draw|math|base] [file or URI...]
+#
+# The sandbox only lets this script run programs from the click or the app's data folder, so it uses
+# shell built-ins plus bin/office-util (mkdir, copy, sleep) and nothing from /usr/bin.
 #
 # Sizing: LO_DPI (LibreOffice's own drawing: toolbars, document, status bar; 96 = desktop) and
 # LO_TEXT_SCALE (text in menus and dialogs). GDK_SCALE has no effect on Lomiri.
 ID=libreoffice.juujbyg
-APP_DIR=$(cd "$(dirname "$0")/.." && pwd)
+case "$0" in */*) here=${0%/*};; *) here=.;; esac
+APP_DIR=$(cd "$here/.." && pwd)
+UTIL="$APP_DIR/bin/office-util"
 DATA="${XDG_DATA_HOME:-$HOME/.local/share}/$ID"
 PROFILE="${XDG_CONFIG_HOME:-$HOME/.config}/$ID/profile"
 CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/$ID"
-export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
-mkdir -p "$CACHE"
+# Documents opened or saved by LibreOffice live here (the sandbox can't see the rest of the home folder).
+DOCS="$DATA/Documents"
+# LibreOffice's single-instance socket. Its full path must stay under 108 characters, which a folder
+# in the cache is not short enough for.
+RUN="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/$ID"
+"$UTIL" mkdir "$CACHE/tmp" "$DOCS" "$RUN"
 
 program() { for p in "$DATA"/libreoffice/opt/*/program; do [ -x "$p/soffice.bin" ] && { echo "$p"; return; }; done; }
 
@@ -22,7 +31,7 @@ PROG=$(program)
 if [ -z "$PROG" ]; then
   OFFICE_DATA="$DATA" qmlscene "$APP_DIR/installer/Main.qml" &
   screen=$!
-  while [ -z "$PROG" ] && kill -0 "$screen" 2>/dev/null; do sleep 1; PROG=$(program); done
+  while [ -z "$PROG" ] && kill -0 "$screen" 2>/dev/null; do "$UTIL" sleep 1; PROG=$(program); done
   [ -n "$PROG" ] || PROG=$(program)
   [ -n "$PROG" ] || exit 1
 fi
@@ -31,7 +40,7 @@ fi
 # page lists hidden, sidebars folded, and the PhoneView macro that opens files at page width).
 fresh=0
 if [ ! -d "$PROFILE/user" ]; then
-  mkdir -p "$PROFILE" && cp -r "$APP_DIR/profile" "$PROFILE/user" && chmod -R u+w "$PROFILE/user"
+  "$UTIL" copy "$APP_DIR/profile" "$PROFILE/user"
   fresh=1
 fi
 
@@ -41,30 +50,36 @@ export WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-0}" GDK_BACKEND=wayland SAL_U
 # cannot scroll: at text scale 1.8 it is ~1650 px wide, so Base uses smaller text to fit 1080 px.
 case "$1" in base) text=1.2;; *) text=1.8;; esac
 export SAL_FORCEDPI="${LO_DPI:-192}" GDK_DPI_SCALE="${LO_TEXT_SCALE:-$text}"
-# Finger-sized buttons, menus and scrollbars, and the look of dialog sheets (share/themes/LibreTouch).
-export GTK_THEME="${LO_GTK_THEME:-LibreTouch}" XDG_DATA_DIRS="$APP_DIR/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+# Finger-sized buttons, menus and scrollbars, and the look of dialog sheets (share/themes/).
+export GTK_THEME="${LO_GTK_THEME:-LibreOfficePhone}" XDG_DATA_DIRS="$APP_DIR/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
 # Lomiri's on-screen keyboard through the Maliit GTK input module (lib/, from Ubuntu's archive).
 printf '"%s"\n"Maliit" "Maliit Input Method" "maliit" "/usr/share/locale" "en:ja:ko:zh:*"\n' \
   "$APP_DIR/lib/gtk-3.0/immodules/im-maliit.so" > "$CACHE/immodules.cache"
 export GTK_IM_MODULE=Maliit GTK_IM_MODULE_FILE="$CACHE/immodules.cache"
+# The sandbox has no dconf and no /tmp: settings stay in memory, temporary files go to the cache.
+export GSETTINGS_BACKEND=memory TMPDIR="$CACHE/tmp" LO_SHIM_PRIVATE_TMP=1
 # Dialogs as phone sheets: Lomiri opens child windows as if 640x480 and never re-centres them,
-# so libnoparent.so maximises every dialog instead and centres small ones as a card.
+# so libnoparent.so maximises every dialog instead and centres small ones as a card. It also
+# moves LibreOffice's single-instance socket out of /tmp, into $RUN (see native/noparent.c).
 export LD_PRELOAD="$APP_DIR/lib/libnoparent.so${LD_PRELOAD:+:$LD_PRELOAD}"
 unset GDK_GL GDK_DEBUG GDK_SCALE
 # No splash screen: Lomiri stops an app whose first window closes before the next one opens.
 case "$1" in writer|calc|impress|draw|math|base) m="--$1"; shift;; *) m="";; esac
 # Start-up log: only the settings this script makes (not the whole environment, which can hold
 # tokens), readable by the user alone.
-( umask 077; { date; env | grep -E '^(SAL_|GDK_|GTK_|LO_|LD_PRELOAD=|WAYLAND_DISPLAY=)' | sort; } > "$CACHE/last.log" 2>&1 )
+( umask 077
+  printf '%s\n' "app $APP_DIR" "SAL_FORCEDPI=$SAL_FORCEDPI" "GDK_DPI_SCALE=$GDK_DPI_SCALE" "GTK_THEME=$GTK_THEME" \
+    "LD_PRELOAD=$LD_PRELOAD" "WAYLAND_DISPLAY=$WAYLAND_DISPLAY" > "$CACHE/last.log" )
 # A fresh profile makes soffice.bin exit with 81 after first-run setup: start it again. That setup
 # replaces the profile's Basic folder with LibreOffice's default one, so the PhoneView macro is put
 # back, once, before the restart (only into the profile made above, never over the user's macros).
 while :; do
-  "$PROG/soffice.bin" $m --nologo --norestore -env:UserInstallation="file://$PROFILE" "$@" 2>>"$CACHE/last.log"
+  "$PROG/soffice.bin" $m --nologo --norestore -env:UserInstallation="file://$PROFILE" \
+    -env:OSL_SOCKET_PATH="$RUN" "$@" 2>>"$CACHE/last.log"
   rc=$?
   [ "$rc" -eq 81 ] || exit "$rc"
   if [ "$fresh" = 1 ]; then
-    cp -r "$APP_DIR/profile/basic/." "$PROFILE/user/basic/" && chmod -R u+w "$PROFILE/user/basic"
+    "$UTIL" copy "$APP_DIR/profile/basic" "$PROFILE/user/basic"
     fresh=0
   fi
 done
