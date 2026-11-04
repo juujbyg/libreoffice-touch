@@ -24,7 +24,11 @@ unset GDK_GL GDK_DEBUG GDK_SCALE
 # so with the splash it stopped LibreOffice a few seconds after launch. Without it LibreOffice can
 # run inside Lomiri's own launch unit, and Lomiri shows its name and icon instead of "Unknown app".
 case "$1" in writer|calc|impress|draw|math|base) m="--$1"; shift;; *) m="";; esac
-mkdir -p "$HOME/.cache"; { date; env | sort; } > "$HOME/.cache/lo-last.log" 2>&1
+# Start-up log: only the settings this script makes (not the whole environment, which can hold
+# tokens), readable by the user alone.
+mkdir -p "$HOME/.cache"; umask 077
+{ date; env | grep -E '^(SAL_|GDK_|GTK_|LO_|LD_PRELOAD=|WAYLAND_DISPLAY=)' | sort; } > "$HOME/.cache/lo-last.log" 2>&1
+umask 022
 # A fresh profile makes soffice.bin exit with 81 after first-run setup: start it again (the soffice wrapper does this too).
 while :; do
   "$LOHOME/program/soffice.bin" $m --nologo --norestore -env:UserInstallation="file://$HOME/.config/libreoffice-ut" "$@" 2>>"$HOME/.cache/lo-last.log"
