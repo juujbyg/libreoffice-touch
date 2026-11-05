@@ -32,7 +32,18 @@ trademarks. The LibreOffice program is installed unmodified, exactly as The Docu
   - the slide and page lists in Impress and Draw hidden;
   - sidebars folded to their icon strip.
 - **On-screen keyboard:** Lomiri's keyboard works through the Maliit GTK input module (`lib/`, from
-  Ubuntu's archive).
+  Ubuntu's archive). Drag the keyboard down, or drag the page, to put it away; tap the page to bring it
+  back (the shim handles both, since LibreOffice itself only asks for the keyboard when its window gains
+  focus).
+  - Lomiri only gives the keyboard to the focused app, and when one app has two windows it checks the
+    first. So the start screen never runs LibreOffice inside its own app: it starts Writer, Calc and the
+    others as their own apps through the URL dispatcher (`appid://`), leaving the document to open in
+    `open-request`, or hands the document to a LibreOffice that's already running.
+- **Languages** (`start/Languages.qml`, `installer/`): menus and spelling dictionaries for 122 languages,
+  from TDF's language packs for the same build. `installer/languages.json` pins each pack's SHA-256;
+  `tools/langpacks.py` made it after checking TDF's GPG signature on every pack. The first install also
+  adds the phone's language. Packs can be added and removed on the Languages page, which also picks the
+  menu language (passed to LibreOffice as `--language`). Removing a pack takes only the files it added.
 
 The app is **confined**, like any normal store app, so LibreOffice only sees the app's own folders. Files
 get in and out through Ubuntu Touch's Content Hub:
@@ -55,6 +66,7 @@ Environment variables for `bin/office`:
 - `LO_TEXT_SCALE`: text size in menus and dialogs (default 1.8).
 - `LO_GTK_THEME`: the GTK theme.
 - `LO_SHIM_DEBUG=1`: logs the dialog shim's decisions to `~/.cache/libreoffice.juujbyg/last.log`.
+- `LO_SHIM_IM_TRACE=1`, or a file `~/.cache/libreoffice.juujbyg/im-trace`: logs every keyboard call there.
 
 ## Building
 

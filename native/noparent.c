@@ -391,6 +391,7 @@ static void on_frame_realize(void *w, void *unused) {
     if (debug) fprintf(stderr, "lo-shim: %p document window maximised\n", w);
 }
 
+static void trace_window(void *w);
 void *gtk_window_new(int type) {
     static void *(*f)(int);
     if (!f) f = dlsym(RTLD_NEXT, "gtk_window_new");
@@ -401,6 +402,7 @@ void *gtk_window_new(int type) {
     unsigned long (*connect)(void *, const char *, void *, void *, void *, int) = gob("g_signal_connect_data");
     connect(w, "realize", (void *)on_frame_realize, NULL, NULL, 1);
     if (debug) connect(w, "map", (void *)on_map_log, NULL, NULL, 1);
+    trace_window(w);
     return w;
 }
 
@@ -409,4 +411,176 @@ void gtk_window_unmaximize(void *w) {
     if (!f) f = dlsym(RTLD_NEXT, "gtk_window_unmaximize");
     if (w && get(w, FRAME)) return; /* document windows stay maximised on the phone */
     f(w);
+}
+
+/* ---- On-screen keyboard -----------------------------------------------------------------------
+ * LibreOffice drives Lomiri's keyboard through a GtkIMContext (the Maliit GTK module in lib/). The
+ * module shows the keyboard on focus_in, which LibreOffice calls only when its window gains focus,
+ * about once on a phone. Swiping the keyboard down (Lomiri's gesture) hides it: the module then
+ * clears the window's focus widget (gtk_window_set_focus NULL), and tapping the page never brought
+ * the keyboard back. So after that, the next tap in the window gives the focus back to the widget
+ * that had it and shows the keyboard again.
+ * With LO_SHIM_IM_TRACE=1, or a file ~/.cache/libreoffice.juujbyg/im-trace, every call is logged
+ * with a timestamp. */
+#include <time.h>
+static int im_trace = -1;
+static long now_ms(void) { struct timespec t; clock_gettime(CLOCK_MONOTONIC, &t); return t.tv_sec * 1000 + t.tv_nsec / 1000000; }
+static int trace_on(void) {
+    char path[512]; const char *home = getenv("HOME");
+    if (getenv("LO_SHIM_IM_TRACE")) return 1;
+    snprintf(path, sizeof path, "%s/.cache/libreoffice.juujbyg/im-trace", home ? home : "");
+    return access(path, F_OK) == 0;
+}
+#define TRACE(...) do { if (im_trace < 0) im_trace = trace_on(); \
+    if (im_trace) { fprintf(stderr, "im %ld ", now_ms() % 100000); fprintf(stderr, __VA_ARGS__); fputc('\n', stderr); } } while (0)
+
+static const char CLIENT[] = "lo-shim-client";
+static void *kbd_ctx;      /* LibreOffice's input context that last had focus */
+static void *kbd_window;   /* its toplevel window, while the keyboard is swiped away */
+static void *kbd_widget;   /* the widget that had the focus before the swipe */
+static int kbd_hidden;
+static int kbd_held;       /* put away by a page drag: LibreOffice's own focus_in waits for a tap */
+
+static void *toplevel_of(void *ctx) {
+    void *gdkwin = ctx ? get(ctx, CLIENT) : NULL, *widget = NULL;
+    if (!gdkwin) return NULL;
+    CALL(gdk, void, gdk_window_get_user_data, (void *, void **))(gdkwin, &widget);
+    return widget ? CALL(gtk, void *, gtk_widget_get_toplevel, (void *))(widget) : NULL;
+}
+static void forget_widget(void *data, void *gone) { (void)data; if (gone == kbd_widget) kbd_widget = NULL; }
+
+typedef struct { int x, y, width, height; } ImRect;
+void gtk_im_context_focus_in(void *c) {
+    static void (*f)(void *); if (!f) f = dlsym(RTLD_NEXT, "gtk_im_context_focus_in");
+    /* Hiding the keyboard makes Lomiri give the window its focus again, and LibreOffice then asks
+     * for the keyboard right back. After a page drag that waits for a tap. */
+    if (kbd_held && c == kbd_ctx) { TRACE("focus_in %p held", c); return; }
+    TRACE("focus_in %p", c); f(c);
+    if (get(c, CLIENT)) { kbd_ctx = c; kbd_hidden = 0; }
+}
+void gtk_im_context_focus_out(void *c) {
+    static void (*f)(void *); if (!f) f = dlsym(RTLD_NEXT, "gtk_im_context_focus_out");
+    TRACE("focus_out %p", c); f(c);
+    if (c == kbd_ctx && !kbd_held) kbd_hidden = 0; /* LibreOffice itself moved on: not a swipe */
+}
+void gtk_im_context_reset(void *c) {
+    static void (*f)(void *); if (!f) f = dlsym(RTLD_NEXT, "gtk_im_context_reset");
+    TRACE("reset %p", c); f(c);
+}
+void gtk_im_context_set_client_window(void *c, void *w) {
+    static void (*f)(void *, void *); if (!f) f = dlsym(RTLD_NEXT, "gtk_im_context_set_client_window");
+    TRACE("client_window %p %p", c, w); f(c, w);
+    if (c) set(c, CLIENT, w);
+    if (!w && c == kbd_ctx) { kbd_ctx = NULL; kbd_hidden = 0; }
+}
+void gtk_im_context_set_cursor_location(void *c, const ImRect *r) {
+    static void (*f)(void *, const ImRect *); if (!f) f = dlsym(RTLD_NEXT, "gtk_im_context_set_cursor_location");
+    TRACE("cursor %p %d,%d %dx%d", c, r ? r->x : -1, r ? r->y : -1, r ? r->width : -1, r ? r->height : -1); f(c, r);
+}
+void gtk_im_context_set_surrounding(void *c, const char *text, int len, int cursor) {
+    static void (*f)(void *, const char *, int, int); if (!f) f = dlsym(RTLD_NEXT, "gtk_im_context_set_surrounding");
+    TRACE("surrounding %p len=%d cursor=%d", c, len, cursor); f(c, text, len, cursor);
+}
+/* The Maliit module calls this with NULL when the keyboard is swiped away. */
+void gtk_window_set_focus(void *win, void *widget) {
+    static void (*f)(void *, void *); if (!f) f = dlsym(RTLD_NEXT, "gtk_window_set_focus");
+    void *before = win ? CALL(gtk, void *, gtk_window_get_focus, (void *))(win) : NULL;
+    TRACE("window_set_focus %p %p (was %p)", win, widget, before);
+    f(win, widget);
+    if (!widget && win && kbd_ctx && toplevel_of(kbd_ctx) == win) {
+        kbd_hidden = 1;
+        kbd_window = win;
+        if (kbd_widget) CALL(gob, void, g_object_weak_unref, (void *, void *, void *))(kbd_widget, (void *)forget_widget, NULL);
+        kbd_widget = before;
+        if (kbd_widget) CALL(gob, void, g_object_weak_ref, (void *, void *, void *))(kbd_widget, (void *)forget_widget, NULL);
+        TRACE("keyboard swiped away");
+    }
+}
+
+/* Touches anywhere in the process, through an emission hook on GtkWidget::event (it runs even
+ * when LibreOffice handles the event). In the window that has the keyboard: dragging the page
+ * (scrolling) puts the keyboard away, and a tap brings it back. A touch arrives as touch events
+ * or as emulated mouse events, so both are watched; each event is seen once per widget it passes
+ * through, so only the first sighting counts. */
+enum { MOTION = 3, PRESS = 4, RELEASE = 7, TOUCH_BEGIN = 37, TOUCH_UPDATE = 38, TOUCH_END = 39, TOUCH_CANCEL = 40 };
+#define DRAG_PX 48
+typedef struct { int type; void *window; signed char send_event; unsigned time; double x, y; } EvPointer;
+static int touching, dragged;
+static double start_y;
+
+static void keyboard_show(void *top) {
+    kbd_hidden = 0;
+    kbd_held = 0;
+    if (kbd_widget && !CALL(gtk, void *, gtk_window_get_focus, (void *))(top))
+        CALL(gtk, void, gtk_widget_grab_focus, (void *))(kbd_widget);
+    gtk_im_context_focus_in(kbd_ctx);
+}
+static void keyboard_hide(void *top) {
+    gtk_im_context_focus_out(kbd_ctx); /* the Maliit module hides the keyboard on focus_out */
+    kbd_hidden = 1;
+    kbd_held = 1;
+    kbd_window = top;
+}
+static int on_any_event(void *ihint, unsigned n, const void *params, void *data) {
+    static const void *last_event; static int last_type; static unsigned last_time;
+    (void)ihint; (void)data;
+    if (!kbd_ctx || n < 2) return 1;
+    const EvPointer *e = CALL(gob, void *, g_value_get_boxed, (const void *))((const char *)params + 24 /* sizeof(GValue) */);
+    if (!e || (e->type != MOTION && e->type != PRESS && e->type != RELEASE && e->type < TOUCH_BEGIN) || e->type > TOUCH_CANCEL)
+        return 1;
+    if (e == last_event && e->type == last_type && e->time == last_time) return 1;
+    last_event = e; last_type = e->type; last_time = e->time;
+    void *widget = CALL(gob, void *, g_value_get_object, (const void *))(params);
+    void *top = widget ? CALL(gtk, void *, gtk_widget_get_toplevel, (void *))(widget) : NULL;
+    if (!top || top != toplevel_of(kbd_ctx)) return 1;
+    switch (e->type) {
+    case PRESS: case TOUCH_BEGIN:
+        touching = 1; dragged = 0; start_y = e->y;
+        break;
+    case MOTION: case TOUCH_UPDATE:
+        if (touching && !dragged && (e->y - start_y > DRAG_PX || start_y - e->y > DRAG_PX)) {
+            dragged = 1;
+            if (!kbd_hidden) { TRACE("drag: keyboard away"); keyboard_hide(top); }
+        }
+        break;
+    default: /* release, touch end */
+        if (touching && !dragged && kbd_hidden) { TRACE("tap: keyboard back"); keyboard_show(top); }
+        touching = 0;
+    }
+    return 1; /* keep the hook */
+}
+static void watch_taps(void) {
+    static int done;
+    if (done) return;
+    done = 1;
+    unsigned id = CALL(gob, unsigned, g_signal_lookup, (const char *, size_t))("event",
+        CALL(gtk, size_t, gtk_widget_get_type, (void))());
+    if (id) CALL(gob, unsigned long, g_signal_add_emission_hook, (unsigned, unsigned, void *, void *, void *))(
+        id, 0, (void *)on_any_event, NULL, NULL);
+}
+
+/* Window events in the trace: size changes (the keyboard shrinks the window), state and focus. */
+typedef struct { int type; void *window; signed char send_event; int x, y, width, height; } EvConfigure;
+typedef struct { int type; void *window; signed char send_event; int changed, state; } EvState;
+typedef struct { int type; void *window; signed char send_event; short in; } EvFocus;
+static int on_configure(void *w, EvConfigure *e, void *u) { (void)u; TRACE("configure %p %dx%d at %d,%d", w, e->width, e->height, e->x, e->y); return 0; }
+static int on_state(void *w, EvState *e, void *u) { (void)u; TRACE("state %p changed=%#x now=%#x", w, e->changed, e->state); return 0; }
+static int on_focus(void *w, EvFocus *e, void *u) { (void)u; TRACE("window_focus %p %s", w, e->in ? "in" : "out"); return 0; }
+/* The window really lost focus (another app): the next focus_in is LibreOffice's own again. */
+static int on_focus_out(void *w, EvFocus *e, void *u) {
+    (void)e; (void)u;
+    if (kbd_held && w == toplevel_of(kbd_ctx)) { kbd_held = 0; kbd_hidden = 0; TRACE("window left: hold released"); }
+    return 0;
+}
+static void trace_window(void *w) {
+    watch_taps();
+    CALL(gob, unsigned long, g_signal_connect_data, (void *, const char *, void *, void *, void *, int))(
+        w, "focus-out-event", (void *)on_focus_out, NULL, NULL, 0);
+    if (im_trace < 0) im_trace = trace_on();
+    if (!im_trace) return;
+    unsigned long (*connect)(void *, const char *, void *, void *, void *, int) = gob("g_signal_connect_data");
+    connect(w, "configure-event", (void *)on_configure, NULL, NULL, 0);
+    connect(w, "window-state-event", (void *)on_state, NULL, NULL, 0);
+    connect(w, "focus-in-event", (void *)on_focus, NULL, NULL, 0);
+    connect(w, "focus-out-event", (void *)on_focus, NULL, NULL, 0);
 }

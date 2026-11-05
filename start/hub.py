@@ -4,15 +4,36 @@ The app is confined, so LibreOffice only sees the app's own folders. Documents l
 ~/.local/share/libreoffice.juujbyg/Documents: files shared to the app through Content Hub are copied
 there, LibreOffice saves there, and the start screen sends them back out through Content Hub.
 """
+import glob
 import os
 import shutil
+import socket
 import subprocess
+import sys
+import threading
+import time
 import urllib.parse
+
+try:
+    import pyotherside
+except ImportError:  # tests on the PC
+    pyotherside = None
 
 ID = "libreoffice.juujbyg"
 APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(os.environ.get("XDG_DATA_HOME") or os.path.expanduser("~/.local/share"), ID)
 DOCS = os.path.join(DATA, "Documents")
+# The menu language picked on the Languages page (a pack's code), which the launcher passes to
+# LibreOffice as --language. No file means LibreOffice follows the phone's language.
+UI_LANGUAGE = os.path.join(DATA, "ui-language")
+# LibreOffice's single-instance socket (see bin/office).
+RUN = os.path.join(os.environ.get("XDG_RUNTIME_DIR") or "/run/user/%d" % os.getuid(), ID)
+# What to open when LibreOffice is started through the URL dispatcher: the app, then the document.
+REQUEST = os.path.join(DATA, "open-request")
+REQUEST_SECONDS = 30
+
+sys.path.insert(0, os.path.join(APP_DIR, "installer"))
+import installer  # noqa: E402
 
 KINDS = {
     "writer": (".odt", ".ott", ".fodt", ".doc", ".docx", ".dot", ".dotx", ".docm", ".rtf", ".txt", ".html", ".htm", ".xml", ".wpd", ".pages", ".epub"),
@@ -78,26 +99,66 @@ def take(urls):
 
 
 def _launch(args):
-    # The launcher sizes LibreOffice for the phone and, on first use, installs it. It runs in this
-    # app's own process group, so Lomiri treats LibreOffice's window as this app's.
     subprocess.Popen([os.path.join(APP_DIR, "bin", "office")] + args, cwd=DOCS,
                      stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def office_running():
+    """Whether a LibreOffice is already running (its single-instance socket answers)."""
+    for path in glob.glob(os.path.join(RUN, "OSL_PIPE_*SingleOfficeIPC_*")):
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+            s.settimeout(1)
+            try:
+                s.connect(path)
+                return True
+            except OSError:
+                pass
+    return False
+
+
+def _forget_request(content):
+    time.sleep(REQUEST_SECONDS)
+    try:
+        with open(REQUEST, encoding="utf-8") as f:
+            if f.read() == content:
+                os.remove(REQUEST)
+    except OSError:
+        pass
+
+
+def _open(app, path=""):
+    """Open a document (or a new one) in LibreOffice. Returns "" when done here, or the address
+    for QML to open (Qt.openUrlExternally).
+
+    LibreOffice mustn't run inside the start screen's app: Lomiri gives the keyboard only to the
+    focused app, and when one app has two windows it checks the first one (the start screen), so
+    the keyboard never showed in LibreOffice. So the first LibreOffice is started as the suite's
+    own app (Writer, Calc...) through the URL dispatcher, and bin/office picks up REQUEST. Once
+    one is running, the document is passed to it, and its window belongs to that app."""
+    if office_running():
+        _launch([path] if path else [app])
+        return ""
+    content = "%s\n%s\n" % (app, path)
+    with open(REQUEST + ".new", "w", encoding="utf-8") as f:
+        f.write(content)
+    os.rename(REQUEST + ".new", REQUEST)
+    threading.Thread(target=_forget_request, args=(content,), daemon=True).start()
+    return "appid://%s/%s/current-user-version" % (ID, app)
 
 
 def open_document(path):
     path = os.path.realpath(path)
     if os.path.dirname(path) != os.path.realpath(DOCS) or not os.path.isfile(path):
-        return False
-    _launch([path])
-    return True
+        return None
+    kind = kind_of(path)
+    return _open(kind if kind in KINDS else "writer", path)
 
 
 def new_document(kind):
     if kind not in KINDS:
-        return False
+        return None
     os.makedirs(DOCS, exist_ok=True)
-    _launch([kind])
-    return True
+    return _open(kind)
 
 
 def delete_document(path):
@@ -106,3 +167,71 @@ def delete_document(path):
         return False
     os.remove(path)
     return True
+
+
+# Languages page ------------------------------------------------------------------------------
+
+def _send(*args):
+    if pyotherside:
+        pyotherside.send(*args)
+
+
+def ui_language():
+    try:
+        with open(UI_LANGUAGE, encoding="utf-8") as f:
+            return f.readline().strip()
+    except OSError:
+        return ""
+
+
+def set_ui_language(code):
+    if not code:
+        try:
+            os.remove(UI_LANGUAGE)
+        except FileNotFoundError:
+            pass
+        return True
+    if code not in installer.installed_languages(DATA):
+        return False
+    with open(UI_LANGUAGE + ".new", "w", encoding="utf-8") as f:
+        f.write(code + "\n")
+    os.rename(UI_LANGUAGE + ".new", UI_LANGUAGE)
+    return True
+
+
+def languages():
+    """Everything the Languages page shows."""
+    installed = set(installer.installed_languages(DATA))
+    items = []
+    for entry in installer.catalog():
+        item = dict(entry)
+        item.pop("sha256", None)
+        item["installed"] = entry["code"] in installed
+        items.append(item)
+    return {"office": installer.installed(DATA), "phone": installer.phone_language() or "",
+            "ui": ui_language(), "items": items}
+
+
+def _run(code, job):
+    def run():
+        try:
+            job()
+            _send("language", code, "done", "")
+        except installer.InstallError as e:
+            _send("language", code, "failed", str(e))
+        except Exception as e:  # noqa: BLE001  anything unexpected still reaches the screen
+            _send("language", code, "failed", "Something went wrong: %s" % e)
+    threading.Thread(target=run, daemon=True).start()
+
+
+def add_language(code):
+    """Download and add a language pack, on a thread: replies with a "language" event."""
+    _run(code, lambda: installer.install_language(code, DATA))
+
+
+def remove_language(code):
+    def job():
+        installer.remove_language(code, DATA)
+        if ui_language() == code:
+            set_ui_language("")
+    _run(code, job)

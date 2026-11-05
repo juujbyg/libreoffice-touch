@@ -20,6 +20,7 @@ MainView {
     property var picking: null       // a transfer started by "Open from…"
     property var exportTo: null      // another app asked to pick a document from LibreOffice
     property string pendingDelete: ''
+    property var languagesPage: null // the Languages page, while it's open
     property bool ready: false
 
     readonly property var apps: [
@@ -43,13 +44,22 @@ MainView {
         py.call('hub.take', [urls], function (paths) {
             transfer.finalize()   // only now: it removes the app's incoming copy
             refresh()
-            if (paths.length > 0) py.call('hub.open_document', [paths[0]])
+            if (paths.length > 0) root.openDocument(paths[0])
         })
     }
 
     function receive(transfer) {
         if (transfer.state === ContentTransfer.Charged) take(transfer)
         else incoming = transfer
+    }
+
+    // Opening goes through hub.py, which answers with an address when LibreOffice has to be
+    // started as its own app (see hub._open).
+    function openDocument(path) {
+        py.call('hub.open_document', [path], function (url) { if (url) Qt.openUrlExternally(url) })
+    }
+    function newDocument(kind) {
+        py.call('hub.new_document', [kind], function (url) { if (url) Qt.openUrlExternally(url) })
     }
 
     function sizeText(bytes) {
@@ -62,6 +72,12 @@ MainView {
         id: py
         Component.onCompleted: {
             addImportPath(Qt.resolvedUrl('.'))
+            setHandler('language', function (code, state, message) {
+                if (root.languagesPage) root.languagesPage.finished(code, state, message)
+            })
+            setHandler('progress', function (step, fraction) {
+                if (root.languagesPage && step === 'language') root.languagesPage.fraction = fraction
+            })
             importModule('hub', function () { root.ready = true; root.refresh() })
         }
         onError: console.log('hub: ' + traceback)
@@ -100,8 +116,14 @@ MainView {
 
     Component { id: contentItem; ContentItem {} }
 
+    PageStack {
+        id: stack
+        Component.onCompleted: push(mainPage)
+    }
+
     Page {
-        anchors.fill: parent
+        id: mainPage
+        visible: false
         header: PageHeader {
             id: header
             title: root.exportTo ? 'Choose a document to send' : 'LibreOffice'
@@ -111,6 +133,12 @@ MainView {
                     text: 'Open from…'
                     visible: !root.exportTo
                     onTriggered: openPicker.visible = true
+                },
+                Action {
+                    iconName: 'language-chooser'
+                    text: 'Languages'
+                    visible: !root.exportTo
+                    onTriggered: root.languagesPage = stack.push(Qt.resolvedUrl('Languages.qml'), { py: py })
                 },
                 Action {
                     iconName: 'close'
@@ -151,7 +179,7 @@ MainView {
                         delegate: AbstractButton {
                             width: grid.cell
                             height: units.gu(12)
-                            onClicked: py.call('hub.new_document', [modelData.kind])
+                            onClicked: root.newDocument(modelData.kind)
                             Column {
                                 anchors.centerIn: parent
                                 spacing: units.gu(0.5)
@@ -197,7 +225,7 @@ MainView {
                         t.items = [contentItem.createObject(root, { url: 'file://' + model.path })]
                         t.state = ContentTransfer.Charged
                     } else {
-                        py.call('hub.open_document', [model.path])
+                        root.openDocument(model.path)
                     }
                 }
                 ListItemLayout {

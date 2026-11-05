@@ -108,6 +108,10 @@ MainView {
                 text: root.step === 'wait' ? 'Another window is installing LibreOffice. Waiting for it…'
                       : root.step === 'download'
                       ? 'Downloading LibreOffice… ' + Math.round(root.fraction * 100) + ' %'
+                      : root.step === 'language'
+                      ? 'Adding menus in your phone\'s language… ' + Math.round(root.fraction * 100) + ' %'
+                      : root.step === 'language-failed'
+                      ? 'Your phone\'s language couldn\'t be added. You can add it later from Languages.'
                       : 'Unpacking… ' + Math.round(root.fraction * 100) + ' %'
             }
 

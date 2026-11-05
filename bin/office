@@ -22,6 +22,19 @@ DOCS="$DATA/Documents"
 RUN="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/$ID"
 "$UTIL" mkdir "$CACHE/tmp" "$DOCS" "$RUN"
 
+# Started by the start screen through the URL dispatcher (start/hub.py, _open): it leaves the app
+# and the document to open in open-request, because an app address can't carry a file. Only a
+# document in the documents folder is taken, and the request is used once (emptied with a
+# built-in, since the sandbox can't run rm).
+REQ="$DATA/open-request"
+if [ $# -eq 1 ] && [ -s "$REQ" ]; then
+  { read -r req_app; read -r req_path; } < "$REQ"
+  if [ "$req_app" = "$1" ]; then
+    : > "$REQ"
+    case "$req_path" in "$DOCS"/*) set -- "$1" "$req_path";; esac
+  fi
+fi
+
 program() { for p in "$DATA"/libreoffice/opt/*/program; do [ -x "$p/soffice.bin" ] && { echo "$p"; return; }; done; }
 
 # First use: the installer screen downloads LibreOffice from The Document Foundation.
@@ -51,6 +64,14 @@ if [ ! -d "$PROFILE/user" ]; then
     printf '%s\n' "$line"
   done < "$xcu")
   printf '%s\n' "$seeded" > "$xcu"
+fi
+
+# Menu language picked on the start screen's Languages page (start/hub.py writes the pack's code).
+# Without it, LibreOffice follows the phone's language when that pack is installed, else English.
+lang=""
+if [ -f "$DATA/ui-language" ]; then
+  read -r ui < "$DATA/ui-language"
+  case "$ui" in ""|*[!A-Za-z0-9-]*) ;; *) lang="--language=$ui";; esac
 fi
 
 export LD_LIBRARY_PATH="$PROG:$APP_DIR/lib"
@@ -83,7 +104,7 @@ case "$1" in writer|calc|impress|draw|math|base) m="--$1"; shift;; *) m="";; esa
 # replaces the profile's Basic folder with LibreOffice's default one, so the PhoneView macro is put
 # back, once, before the restart (only into the profile made above, never over the user's macros).
 while :; do
-  "$PROG/soffice.bin" $m --nologo --norestore -env:UserInstallation="file://$PROFILE" \
+  "$PROG/soffice.bin" $m $lang --nologo --norestore -env:UserInstallation="file://$PROFILE" \
     -env:OSL_SOCKET_PATH="$RUN" "$@" 2>>"$CACHE/last.log"
   rc=$?
   [ "$rc" -eq 81 ] || exit "$rc"
