@@ -413,6 +413,149 @@ void gtk_window_unmaximize(void *w) {
     f(w);
 }
 
+/* ---- Back arrow --------------------------------------------------------------------------------
+ * On the phone, the only way out of a document was the small close button at the right end of the
+ * menu bar. Every menu bar (Writer, Calc, Impress, Draw, Math, Base) gets a large back arrow at its
+ * left end. It closes the window the way the system would: LibreOffice asks about unsaved changes,
+ * and quits after its last window. Once the window is gone (or has turned into LibreOffice's own
+ * Start Center), the app's start screen is brought back through the URL dispatcher.
+ * LO_SHIM_TEST_BACK=<seconds> presses the arrow by itself, for tests; with LO_SHIM_SNAPSHOT=<file.png>
+ * the window is drawn into that file a second before (screen capture doesn't work on the phone). */
+static void *gio(const char *s) { return dlsym(lib("libgio-2.0.so.0"), s); }
+static void *cairo(const char *s) { return dlsym(lib("libcairo.so.2"), s); }
+static const char BACK[] = "lo-shim-back";
+
+static void show_start_screen(void) {
+    /* The package from the app id Lomiri gives each app (libreoffice.juujbyg_writer_0.4.0). */
+    const char *app = getenv("APP_ID");
+    char url[200];
+    size_t n = app ? strcspn(app, "_") : 0;
+    if (!n || n > 100) return;
+    snprintf(url, sizeof url, "appid://%.*s/a-libreoffice/current-user-version", (int)n, app);
+    void *bus = CALL(gio, void *, g_bus_get_sync, (int, void *, void **))(2 /* G_BUS_TYPE_SESSION */, NULL, NULL);
+    if (!bus) return;
+    void *args = CALL(glib, void *, g_variant_new, (const char *, ...))("(ss)", url, "");
+    void *err = NULL;
+    void *reply = CALL(gio, void *, g_dbus_connection_call_sync, (void *, const char *, const char *, const char *,
+        const char *, void *, void *, int, int, void *, void **))(bus, "com.lomiri.URLDispatcher",
+        "/com/lomiri/URLDispatcher", "com.lomiri.URLDispatcher", "DispatchURL", args, NULL, 0, 5000, NULL, &err);
+    if (reply) CALL(glib, void, g_variant_unref, (void *))(reply);
+    if (err) {
+        if (debug) fprintf(stderr, "lo-shim: start screen: %s\n", ((struct { unsigned d; int c; char *m; } *)err)->m);
+        CALL(glib, void, g_error_free, (void *))(err);
+    } else if (debug) fprintf(stderr, "lo-shim: start screen asked for (%s)\n", url);
+    CALL(gob, void, g_object_unref, (void *))(bus);
+}
+
+static void on_back_window_gone(void *w, void *unused) { (void)w; (void)unused; show_start_screen(); }
+
+static int close_again(void *w) {
+    CALL(gtk, void, gtk_window_close, (void *))(w);
+    CALL(gob, void, g_object_unref, (void *))(w);
+    return 0;
+}
+
+static void on_back(void *button, void *unused) {
+    (void)unused;
+    void *w = CALL(gtk, void *, gtk_widget_get_toplevel, (void *))(button);
+    if (!w || !is_a(w, "gtk_window_get_type")) return;
+    if (!get(w, BACK)) {
+        set(w, BACK, (void *)1);
+        CALL(gob, unsigned long, g_signal_connect_data, (void *, const char *, void *, void *, void *, int))(
+            w, "destroy", (void *)on_back_window_gone, NULL, NULL, 0);
+    }
+    if (debug) fprintf(stderr, "lo-shim: back pressed in %p\n", w);
+    CALL(gtk, void, gtk_window_close, (void *))(w);
+}
+
+/* Closing the last document can leave LibreOffice's Start Center in the same window instead: then
+ * close that too (which quits LibreOffice) and show the app's start screen. */
+void gtk_window_set_title(void *w, const char *title) {
+    static void (*f)(void *, const char *);
+    if (!f) f = dlsym(RTLD_NEXT, "gtk_window_set_title");
+    f(w, title);
+    if (w && title && get(w, BACK) && !strcmp(title, "LibreOffice")) {
+        set(w, BACK, NULL);
+        show_start_screen();
+        CALL(gob, void *, g_object_ref, (void *))(w);
+        CALL(glib, unsigned, g_idle_add, (int (*)(void *), void *))(close_again, w);
+    }
+}
+
+static int snapshot(void *button) {
+    const char *path = getenv("LO_SHIM_SNAPSHOT");
+    void *w = CALL(gtk, void *, gtk_widget_get_toplevel, (void *))(button);
+    int ww = CALL(gtk, int, gtk_widget_get_allocated_width, (void *))(w);
+    int hh = CALL(gtk, int, gtk_widget_get_allocated_height, (void *))(w);
+    if (path && ww > 0 && hh > 0) {
+        void *surface = CALL(cairo, void *, cairo_image_surface_create, (int, int, int))(0 /* ARGB32 */, ww, hh);
+        void *cr = CALL(cairo, void *, cairo_create, (void *))(surface);
+        CALL(gtk, void, gtk_widget_draw, (void *, void *))(w, cr);
+        CALL(cairo, int, cairo_surface_write_to_png, (void *, const char *))(surface, path);
+        CALL(cairo, void, cairo_destroy, (void *))(cr);
+        CALL(cairo, void, cairo_surface_destroy, (void *))(surface);
+        fprintf(stderr, "lo-shim: snapshot %dx%d saved\n", ww, hh);
+    }
+    CALL(gob, void, g_object_unref, (void *))(button);
+    return 0;
+}
+
+static int press_back(void *button) {
+    CALL(gtk, void, gtk_button_clicked, (void *))(button);
+    CALL(gob, void, g_object_unref, (void *))(button);
+    return 0;
+}
+
+static int add_back(void *menubar) {
+    void *grid = NULL;
+    for (void *p = CALL(gtk, void *, gtk_widget_get_parent, (void *))(menubar); p;
+         p = CALL(gtk, void *, gtk_widget_get_parent, (void *))(p))
+        if (is_a(p, "gtk_grid_get_type")) { grid = p; break; }
+    /* LibreOffice's menu bar row: a grid with the menu (in a scrolled area) at column 0 and its
+     * close button at column 1. The arrow goes at column -1. */
+    if (grid && !get(grid, BACK)) {
+        set(grid, BACK, (void *)1);
+        void *b = CALL(gtk, void *, gtk_button_new_from_icon_name, (const char *, int))("go-previous-symbolic", 3);
+        void *img = CALL(gtk, void *, gtk_button_get_image, (void *))(b);
+        if (img) CALL(gtk, void, gtk_image_set_pixel_size, (void *, int))(img, 48);
+        add_class(b, "lo-back");
+        CALL(gtk, void, gtk_widget_set_tooltip_text, (void *, const char *))(b, "Back to the LibreOffice start screen");
+        CALL(gtk, void, gtk_widget_set_valign, (void *, int))(b, 3 /* GTK_ALIGN_CENTER */);
+        CALL(gob, unsigned long, g_signal_connect_data, (void *, const char *, void *, void *, void *, int))(
+            b, "clicked", (void *)on_back, NULL, NULL, 0);
+        CALL(gtk, void, gtk_grid_attach, (void *, void *, int, int, int, int))(grid, b, -1, 0, 1, 1);
+        CALL(gtk, void, gtk_widget_show, (void *))(b);
+        if (debug) fprintf(stderr, "lo-shim: back arrow added to %p (%s)\n", grid,
+                           CALL(gob, const char *, g_type_name_from_instance, (void *))(
+                               CALL(gtk, void *, gtk_widget_get_parent, (void *))(grid)));
+        const char *test = getenv("LO_SHIM_TEST_BACK");
+        if (test && atoi(test) > 1) {
+            CALL(gob, void *, g_object_ref, (void *))(b);
+            CALL(glib, unsigned, g_timeout_add_seconds, (unsigned, int (*)(void *), void *))((unsigned)atoi(test) - 1, snapshot, b);
+        }
+        if (test && atoi(test) > 0) {
+            CALL(gob, void *, g_object_ref, (void *))(b);
+            CALL(glib, unsigned, g_timeout_add_seconds, (unsigned, int (*)(void *), void *))((unsigned)atoi(test), press_back, b);
+        }
+    }
+    CALL(gob, void, g_object_unref, (void *))(menubar);
+    return 0; /* G_SOURCE_REMOVE */
+}
+
+/* LibreOffice's native menu bar (GtkSalMenu) is made from a menu model; the arrow is added once
+ * the menu bar sits in its row. */
+void *gtk_menu_bar_new_from_model(void *model) {
+    static void *(*f)(void *);
+    if (!f) f = dlsym(RTLD_NEXT, "gtk_menu_bar_new_from_model");
+    if (debug < 0) debug = getenv("LO_SHIM_DEBUG") != NULL;
+    void *m = f(model);
+    if (m) {
+        CALL(gob, void *, g_object_ref, (void *))(m);
+        CALL(glib, unsigned, g_idle_add, (int (*)(void *), void *))(add_back, m);
+    }
+    return m;
+}
+
 /* ---- On-screen keyboard -----------------------------------------------------------------------
  * LibreOffice drives Lomiri's keyboard through a GtkIMContext (the Maliit GTK module in lib/). The
  * module shows the keyboard on focus_in, which LibreOffice calls only when its window gains focus,

@@ -44,12 +44,16 @@ trademarks. The LibreOffice program is installed unmodified, exactly as The Docu
   `tools/langpacks.py` made it after checking TDF's GPG signature on every pack. The first install also
   adds the phone's language. Packs can be added and removed on the Languages page, which also picks the
   menu language (passed to LibreOffice as `--language`). Removing a pack takes only the files it added.
+- **Back arrow:** every LibreOffice window's menu bar gets a large back arrow at its left end
+  (`native/noparent.c`). It closes the window as the system would (LibreOffice asks about unsaved
+  changes and quits after its last window), then brings the LibreOffice start screen back through the
+  URL dispatcher. `tools/back-test.sh` tests it on the phone (`LO_SHIM_TEST_BACK`, `LO_SHIM_SNAPSHOT`).
 - **Digital signatures** (`start/Certificates.qml`, `start/certs.py`): LibreOffice signs documents
   (File ▸ Digital Signatures, and signed PDF export) with X.509 certificates from an NSS database. The
   sandbox can't see Firefox's or Thunderbird's, so the app keeps its own in
   `~/.local/share/libreoffice.juujbyg/certificates`, and `bin/office` points LibreOffice at it with
   `MOZILLA_CERTIFICATE_FOLDER`. The start screen's **Signing certificates** page adds a `.p12`/`.pfx` file
-  (picked from Files or the browser's downloads, or shared to LibreOffice) with its password, using the
+  (picked from Files or the browser's downloads, or opened with LibreOffice from Files) with its password, using the
   phone's NSS through `ctypes`, since the sandbox can't run `pk12util`. The file itself isn't kept. The
   database has no password of its own, like a browser profile without a primary password. OpenPGP
   signing isn't supported (LibreOffice would need GnuPG, which the sandbox can't run).
