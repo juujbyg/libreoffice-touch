@@ -74,6 +74,12 @@ if [ -f "$DATA/ui-language" ]; then
   case "$ui" in ""|*[!A-Za-z0-9-]*) ;; *) lang="--language=$ui";; esac
 fi
 
+# Signing certificates (File > Digital Signatures, signed PDF export): LibreOffice reads them from an
+# NSS database, which the start screen's Certificates page fills (start/certs.py). The folder is made
+# here so that LibreOffice always opens that store (it makes the database files if they're missing).
+( umask 077; "$UTIL" mkdir "$DATA/certificates" )
+export MOZILLA_CERTIFICATE_FOLDER="sql:$DATA/certificates"
+
 export LD_LIBRARY_PATH="$PROG:$APP_DIR/lib"
 export WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-0}" GDK_BACKEND=wayland SAL_USE_VCLPLUGIN=gtk3
 # Base opens with its Database Wizard, which LibreOffice draws itself in a fixed-size window that

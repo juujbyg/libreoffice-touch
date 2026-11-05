@@ -34,6 +34,7 @@ REQUEST_SECONDS = 30
 
 sys.path.insert(0, os.path.join(APP_DIR, "installer"))
 import installer  # noqa: E402
+import certs  # noqa: E402
 
 KINDS = {
     "writer": (".odt", ".ott", ".fodt", ".doc", ".docx", ".dot", ".dotx", ".docm", ".rtf", ".txt", ".html", ".htm", ".xml", ".wpd", ".pages", ".epub"),
@@ -235,3 +236,42 @@ def remove_language(code):
         if ui_language() == code:
             set_ui_language("")
     _run(code, job)
+
+
+# Certificates page (signing) -------------------------------------------------------------------
+
+def is_certificate(url):
+    return _local_path(url).lower().endswith(certs.EXTENSIONS)
+
+
+def certificates():
+    """Everything the Certificates page shows."""
+    try:
+        items, error = certs.list_certificates(DATA), ""
+    except certs.CertError as e:
+        items, error = [], str(e)
+    return {"items": items, "error": error, "running": office_running()}
+
+
+def add_certificate(url, password):
+    """Import a .p12/.pfx file (from Content Hub), on a thread: replies with a "certificate" event.
+    The file itself isn't kept: QML finalizes the transfer, which deletes the incoming copy."""
+    path = _local_path(url)
+
+    def run():
+        try:
+            items = certs.import_certificate(DATA, path, password)
+            added = [c["name"] for c in items if c.get("new")]
+            _send("certificate", "done", ", ".join(added))
+        except certs.CertError as e:
+            _send("certificate", "failed", str(e))
+        except Exception as e:  # noqa: BLE001  anything unexpected still reaches the screen
+            _send("certificate", "failed", "Something went wrong: %s" % e)
+    threading.Thread(target=run, daemon=True).start()
+
+
+def remove_certificate(cert_id):
+    try:
+        return "" if certs.remove_certificate(DATA, cert_id) else "That certificate is already gone."
+    except certs.CertError as e:
+        return str(e)

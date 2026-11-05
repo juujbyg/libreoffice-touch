@@ -21,6 +21,7 @@ MainView {
     property var exportTo: null      // another app asked to pick a document from LibreOffice
     property string pendingDelete: ''
     property var languagesPage: null // the Languages page, while it's open
+    property var certificatesPage: null // the Certificates page, while it's open
     property bool ready: false
 
     readonly property var apps: [
@@ -38,9 +39,14 @@ MainView {
     }
 
     // Files handed over by another app: copy them into the app's folder and open the first one.
+    // A signing certificate (.p12, .pfx) goes to the Certificates page instead, and isn't kept.
     function take(transfer) {
         var urls = []
         for (var i = 0; i < transfer.items.length; ++i) urls.push(String(transfer.items[i].url))
+        if (urls.length > 0 && /\.(p12|pfx)$/i.test(urls[0])) {
+            openCertificates().offer(transfer)
+            return
+        }
         py.call('hub.take', [urls], function (paths) {
             transfer.finalize()   // only now: it removes the app's incoming copy
             refresh()
@@ -62,6 +68,12 @@ MainView {
         py.call('hub.new_document', [kind], function (url) { if (url) Qt.openUrlExternally(url) })
     }
 
+    function openCertificates() {
+        if (!certificatesPage || stack.currentPage !== certificatesPage)
+            certificatesPage = stack.push(Qt.resolvedUrl('Certificates.qml'), { py: py })
+        return certificatesPage
+    }
+
     function sizeText(bytes) {
         if (bytes < 1024) return bytes + ' B'
         if (bytes < 1048576) return Math.round(bytes / 1024) + ' KB'
@@ -77,6 +89,10 @@ MainView {
             })
             setHandler('progress', function (step, fraction) {
                 if (root.languagesPage && step === 'language') root.languagesPage.fraction = fraction
+            })
+            setHandler('certificate', function (state, message) {
+                if (root.certificatesPage && stack.currentPage === root.certificatesPage)
+                    root.certificatesPage.finished(state, message)
             })
             importModule('hub', function () { root.ready = true; root.refresh() })
         }
@@ -139,6 +155,12 @@ MainView {
                     text: 'Languages'
                     visible: !root.exportTo
                     onTriggered: root.languagesPage = stack.push(Qt.resolvedUrl('Languages.qml'), { py: py })
+                },
+                Action {
+                    iconName: 'stock_key'
+                    text: 'Signing certificates'
+                    visible: !root.exportTo
+                    onTriggered: root.openCertificates()
                 },
                 Action {
                     iconName: 'close'

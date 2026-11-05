@@ -44,6 +44,15 @@ trademarks. The LibreOffice program is installed unmodified, exactly as The Docu
   `tools/langpacks.py` made it after checking TDF's GPG signature on every pack. The first install also
   adds the phone's language. Packs can be added and removed on the Languages page, which also picks the
   menu language (passed to LibreOffice as `--language`). Removing a pack takes only the files it added.
+- **Digital signatures** (`start/Certificates.qml`, `start/certs.py`): LibreOffice signs documents
+  (File ▸ Digital Signatures, and signed PDF export) with X.509 certificates from an NSS database. The
+  sandbox can't see Firefox's or Thunderbird's, so the app keeps its own in
+  `~/.local/share/libreoffice.juujbyg/certificates`, and `bin/office` points LibreOffice at it with
+  `MOZILLA_CERTIFICATE_FOLDER`. The start screen's **Signing certificates** page adds a `.p12`/`.pfx` file
+  (picked from Files or the browser's downloads, or shared to LibreOffice) with its password, using the
+  phone's NSS through `ctypes`, since the sandbox can't run `pk12util`. The file itself isn't kept. The
+  database has no password of its own, like a browser profile without a primary password. OpenPGP
+  signing isn't supported (LibreOffice would need GnuPG, which the sandbox can't run).
 
 The app is **confined**, like any normal store app, so LibreOffice only sees the app's own folders. Files
 get in and out through Ubuntu Touch's Content Hub:
@@ -74,6 +83,7 @@ Environment variables for `bin/office`:
 ./build.sh            # needs Docker; writes build/libreoffice.juujbyg_<version>_arm64.click
 python3 -I tests/installer_check.py   # installer logic with a fake archive, no network
 python3 -I tests/hub_check.py         # start screen backend
+python3 -I tests/certs_check.py       # certificate import, with the PC's NSS and openssl-made test files
 ```
 
 `build.sh` cross-compiles the shim in the `clickable/amd64-ut24.04-1.x-arm64` image. It downloads the two
