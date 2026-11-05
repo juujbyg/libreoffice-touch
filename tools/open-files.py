@@ -12,7 +12,7 @@ try:
         app, path = arg.split("=", 1)
         uri = "file://" + urllib.parse.quote(path)
         sh("pkill -x soffice.bin; sleep 4")
-        r = sh(f"su phablet -c '{ENV}; timeout 10 lomiri-app-launch libreoffice.juujbyg_{app}_0.2.2 \"{uri}\"'")
+        r = sh(f"su phablet -c '{ENV}; timeout 10 lomiri-app-launch libreoffice.juujbyg_{app}_0.2.3 \"{uri}\"'")
         time.sleep(30)
         for _ in range(2):
             sh(f"timeout 20 mirscreencast -m /run/user/32011/mir_socket_trusted -n 1 -f /tmp/of-{app}.raw"); time.sleep(1)

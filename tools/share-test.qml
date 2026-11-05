@@ -13,7 +13,7 @@ Item {
             for (var i = 0; i < peers.peers.length; ++i) {
                 var peer = peers.peers[i]
                 console.log('peer: ' + peer.appId)
-                if (peer.appId.indexOf('libreoffice.juujbyg_libreoffice') === 0) {
+                if (peer.appId.indexOf('libreoffice.juujbyg_z-libreoffice') === 0) {
                     transfer = peer.request()
                     transfer.items = [item.createObject(null, { url: Qt.resolvedUrl('Report.docx') })]
                     transfer.state = ContentTransfer.Charged

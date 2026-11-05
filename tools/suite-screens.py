@@ -10,7 +10,7 @@ def sh(c): return subprocess.run(c, shell=True, capture_output=True, text=True).
 try:
     for app in sys.argv[1:]:
         sh("pkill -x soffice.bin; sleep 4")
-        sh(f'su phablet -c "{ENV}; timeout 10 lomiri-app-launch libreoffice.juujbyg_{app}_0.2.2"')
+        sh(f'su phablet -c "{ENV}; timeout 10 lomiri-app-launch libreoffice.juujbyg_{app}_0.2.3"')
         time.sleep(int(__import__("os").environ.get("WAIT", "30")))
         for _ in range(2):
             sh(f"timeout 20 mirscreencast -m /run/user/32011/mir_socket_trusted -n 1 -f /tmp/su-{app}.raw"); time.sleep(1)

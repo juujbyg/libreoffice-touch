@@ -13,7 +13,7 @@ sleep 4; click list --user=phablet | grep $ID; rm -f "$H/${CLICK##*/}"
 rm -f /tmp/hub-*.raw
 c=$(dbus-send --system --print-reply --dest=com.canonical.Unity.Screen /com/canonical/Unity/Screen com.canonical.Unity.Screen.keepDisplayOn | awk '/int32/{print $2}')
 T=$(date '+%F %T')
-su phablet -c "$ENV; timeout 10 lomiri-app-launch ${ID}_libreoffice_$V"
+su phablet -c "$ENV; timeout 10 lomiri-app-launch ${ID}_z-libreoffice_$V"
 sleep 12; shot start
 D=$H/.cache/docviewer.ubports; cp /tmp/share-test.qml "$H/Documents/LibreOffice test/Report.docx" $D/ && chown phablet: $D/share-test.qml $D/Report.docx
 su phablet -c "$ENV; cd $D; APP_ID=docviewer.ubports_docviewer_3.1.3 QT_QPA_PLATFORM=offscreen aa-exec -p docviewer.ubports_docviewer_3.1.3 -- qmlscene $D/share-test.qml" 2>&1 | grep -E "peer|shared|offered" | head

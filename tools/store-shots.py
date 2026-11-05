@@ -28,7 +28,7 @@ try:
     for app in sys.argv[1:] or SHOTS:
         stop()
         uri = "file://" + os.path.join(DOCS, SHOTS[app]).replace(" ", "%20")
-        subprocess.run(["su", "phablet", "-c", f'{ENV}; timeout 10 lomiri-app-launch libreoffice.juujbyg_{app}_0.2.2 "{uri}"'])
+        subprocess.run(["su", "phablet", "-c", f'{ENV}; timeout 10 lomiri-app-launch libreoffice.juujbyg_{app}_0.2.3 "{uri}"'])
         time.sleep(int(os.environ.get("WAIT", "25")))
         for _ in range(2):
             subprocess.run(["timeout", "20", "mirscreencast", "-m", "/run/user/32011/mir_socket_trusted", "-n", "1", "-f", f"/tmp/store-{app}.raw"],
