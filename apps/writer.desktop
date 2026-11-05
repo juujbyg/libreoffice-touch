@@ -2,7 +2,10 @@
 Name=LibreOffice Writer
 Comment=Write letters, reports and other text documents (.odt, .docx)
 Exec=bin/office writer %U
-Icon=icons/writer.svg
+# The ./ in the icon path is for the OpenStore: its parser takes the store icon from the last app
+# in the package (Writer) only when the path matches a packaged file name exactly. With no match
+# the store keeps the LibreOffice icon it already has. On the phone the path is the same file.
+Icon=icons/./writer.svg
 Terminal=false
 Type=Application
 X-Lomiri-Touch=true

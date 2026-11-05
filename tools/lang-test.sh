@@ -4,7 +4,7 @@
 # LibreOffice's menus switch to it and its dictionary registers in a profile made before the pack
 # was added, then removes it. Usage: lang-test.sh <version> [code]
 V=$1; CODE=${2:-de}; ID=libreoffice.juujbyg; H=/home/phablet
-PROF=${ID}_z-libreoffice_$V; APP=/opt/click.ubuntu.com/$ID/current
+PROF=${ID}_a-libreoffice_$V; APP=/opt/click.ubuntu.com/$ID/current
 DATA=$H/.local/share/$ID; T=$H/.cache/$ID/langtest
 ENV="export XDG_RUNTIME_DIR=/run/user/32011 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/32011/bus"
 c=$(dbus-send --system --print-reply --dest=com.canonical.Unity.Screen /com/canonical/Unity/Screen com.canonical.Unity.Screen.keepDisplayOn | awk '/int32/{print $2}')
