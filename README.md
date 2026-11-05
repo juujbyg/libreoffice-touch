@@ -32,9 +32,10 @@ trademarks. The LibreOffice program is installed unmodified, exactly as The Docu
   - the slide and page lists in Impress and Draw hidden;
   - sidebars folded to their icon strip.
 - **On-screen keyboard:** Lomiri's keyboard works through the Maliit GTK input module (`lib/`, from
-  Ubuntu's archive). Drag the keyboard down, or drag the page, to put it away; tap the page to bring it
-  back (the shim handles both, since LibreOffice itself only asks for the keyboard when its window gains
-  focus).
+  Ubuntu's archive). It comes up when you tap where the text goes (the page, or a text field in a
+  dialog), not when you open a menu or a dialog; drag the keyboard down, or drag the page, to put it
+  away. The shim does this (LibreOffice asks for the keyboard every time its document gets the focus
+  back, and the module would show it each time).
   - Lomiri only gives the keyboard to the focused app, and when one app has two windows it checks the
     first. So the start screen never runs LibreOffice inside its own app: it starts Writer, Calc and the
     others as their own apps through the URL dispatcher (`appid://`), leaving the document to open in

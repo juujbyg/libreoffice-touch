@@ -55,15 +55,25 @@ fresh=0
 if [ ! -d "$PROFILE/user" ]; then
   "$UTIL" copy "$APP_DIR/profile" "$PROFILE/user"
   fresh=1
-  # LibreOffice's Open and Save dialogs start in the documents folder, which the start screen
-  # lists. The path depends on the user, so it is added here (with shell built-ins only).
-  xcu="$PROFILE/user/registrymodifications.xcu"
-  work="<item oor:path=\"/org.openoffice.Office.Paths/Paths/org.openoffice.Office.Paths:NamedPath['Work']\"><prop oor:name=\"WritePath\" oor:op=\"fuse\"><value>file://$DOCS</value></prop></item>"
-  seeded=$(while IFS= read -r line; do
-    case "$line" in *'</oor:items>'*) printf '%s\n' "$work";; esac
-    printf '%s\n' "$line"
+fi
+# LibreOffice's Open and Save dialogs start in the documents folder, which the start screen lists.
+# Without it they open in the home folder, which the sandbox can't read ("Could not read the
+# contents of phablet"). The path depends on the user, so it is added here with shell built-ins: to
+# a new profile, and to one made before this was done. Not while LibreOffice runs (its .lock file),
+# since it rewrites this file itself. The last line may have no newline, hence the `|| [ -n ]`.
+xcu="$PROFILE/user/registrymodifications.xcu"
+if [ -f "$xcu" ] && [ ! -e "$PROFILE/user/.lock" ]; then
+  has_work=$(while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in *"NamedPath['Work']"*) echo y; break;; esac
   done < "$xcu")
-  printf '%s\n' "$seeded" > "$xcu"
+  if [ -z "$has_work" ]; then
+    work="<item oor:path=\"/org.openoffice.Office.Paths/Paths/org.openoffice.Office.Paths:NamedPath['Work']\"><prop oor:name=\"WritePath\" oor:op=\"fuse\"><value>file://$DOCS</value></prop></item>"
+    seeded=$(while IFS= read -r line || [ -n "$line" ]; do
+      case "$line" in *'</oor:items>'*) printf '%s\n' "$work";; esac
+      printf '%s\n' "$line"
+    done < "$xcu")
+    case "$seeded" in *'</oor:items>'*) printf '%s\n' "$seeded" > "$xcu";; esac
+  fi
 fi
 
 # Menu language picked on the start screen's Languages page (start/hub.py writes the pack's code).
