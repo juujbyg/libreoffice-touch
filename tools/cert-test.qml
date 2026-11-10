@@ -1,7 +1,8 @@
 // Root helper for tools/cert-test.sh: drives the start screen's certificate backend through
 // pyotherside inside the app's sandbox (as the real page does) and grabs the Certificates page.
 // CERT_TEST_MODE=add: wrong password, then the right one, then the page is saved to certificates.png.
-// CERT_TEST_MODE=remove: removes every certificate and checks the store is empty.
+// CERT_TEST_MODE=remove: removes the test's own certificate (CN=Test Signer) and leaves the rest.
+// CERT_TEST_MODE=import: imports CERT_TEST_FILE with CERT_TEST_PASSWORD (to put a certificate back).
 // Output lines start with "cert-test:".
 import QtQuick 2.7
 import QtQuick.Window 2.2
@@ -51,13 +52,27 @@ Window {
                             function () { stack.push(Qt.resolvedUrl('file:///opt/click.ubuntu.com/libreoffice.juujbyg/current/start/Certificates.qml'), { py: py })
                                           grab.start() }
                         ]
+                    } else if (mode === 'import') {
+                        // Puts back a certificate of the user's: CERT_TEST_FILE (readable by the sandbox), CERT_TEST_PASSWORD.
+                        steps = [
+                            function () { call('os.getenv', ['CERT_TEST_FILE'], function (f) {
+                                call('os.getenv', ['CERT_TEST_PASSWORD'], function (p) {
+                                    waiting = function (s) { log(s === 'done' ? 'ok imported' : 'FAIL not imported'); next() }
+                                    call('hub.add_certificate', ['file://' + f, p || ''])
+                                }) }) },
+                            function () { call('hub.certificates', [], function (r) {
+                                              for (var i = 0; i < r.items.length; ++i) log('cert ' + r.items[i].name + ' | ' + r.items[i].subject)
+                                              next() }) }
+                        ]
                     } else {
+                        // Removes only the test's own certificate, never the user's.
                         steps = [
                             function () { call('hub.certificates', [], function (r) {
-                                              var left = r.items.length
+                                              var mine = r.items.filter(function (c) { return c.subject.indexOf('O=LibreOffice Touch test,CN=Test Signer') >= 0 })
+                                              var left = mine.length
                                               if (left === 0) { log('nothing to remove'); next(); return }
-                                              for (var i = 0; i < r.items.length; ++i)
-                                                  call('hub.remove_certificate', [r.items[i].id], function (error) {
+                                              for (var i = 0; i < mine.length; ++i)
+                                                  call('hub.remove_certificate', [mine[i].id], function (error) {
                                                       log('remove: ' + (error || 'ok'))
                                                       if (--left === 0) next()
                                                   })
