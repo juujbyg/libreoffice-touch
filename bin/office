@@ -90,6 +90,22 @@ fi
 ( umask 077; "$UTIL" mkdir "$DATA/certificates" )
 export MOZILLA_CERTIFICATE_FOLDER="sql:$DATA/certificates"
 
+# The phone's own folders are outside the sandbox, so in GTK's Open and Save dialogs "Home" (and the
+# path bar's first button) is the documents folder; tapping the real one only gave "Could not read
+# the contents of phablet". Files from the phone come in through "Phone files…" in the Open dialog
+# (native/noparent.c, start/hub.py). LibreOffice's data, config and cache folders are pinned first so
+# that only HOME moves. GTK reads the phone's folder list (Documents, Downloads...) from
+# user-dirs.dirs in XDG_CONFIG_HOME, and those would fail the same way, so GTK gets a config folder
+# of its own whose list is empty; LibreOffice's profile is named on its command line and stays put.
+export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}" XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+GTK_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/$ID/gtk"
+"$UTIL" mkdir "$GTK_CONFIG"
+printf 'XDG_DESKTOP_DIR="$HOME/"\n' > "$GTK_CONFIG/user-dirs.dirs"
+export XDG_CONFIG_HOME="$GTK_CONFIG" HOME="$DOCS"
+# The dialogs list the starting folder in their sidebar too, and Lomiri starts apps in their install
+# folder, so LibreOffice starts in the documents folder (documents are always passed as full paths).
+cd "$DOCS" || exit 1
+
 export LD_LIBRARY_PATH="$PROG:$APP_DIR/lib"
 export WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-0}" GDK_BACKEND=wayland SAL_USE_VCLPLUGIN=gtk3
 # Base opens with its Database Wizard, which LibreOffice draws itself in a fixed-size window that

@@ -18,6 +18,8 @@ MainView {
 
     property var incoming: null      // a transfer from another app that isn't ready yet
     property var picking: null       // a transfer started by "Open from…"
+    property string pickFor: ''      // the suite app whose Open dialog asked for a phone file
+    property var phonePick: null     // the transfer for it
     property var exportTo: null      // another app asked to pick a document from LibreOffice
     property string pendingDelete: ''
     property var languagesPage: null // the Languages page, while it's open
@@ -68,6 +70,26 @@ MainView {
         py.call('hub.new_document', [kind], function (url) { if (url) Qt.openUrlExternally(url) })
     }
 
+    // "Phone files…" in LibreOffice's Open dialog brought this screen up (see hub.pick_request): offer
+    // the phone's apps, then go back to LibreOffice, whose dialog selects the copied file.
+    function checkPick() {
+        if (!ready || pickFor) return
+        py.call('hub.pick_request', [], function (app) {
+            if (!app) return
+            root.pickFor = app
+            phonePicker.visible = true
+        })
+    }
+    function pickDone(urls) {
+        var app = pickFor
+        pickFor = ''
+        py.call('hub.picked', [app, urls], function (url) {
+            if (root.phonePick) { root.phonePick.finalize(); root.phonePick = null }
+            refresh()
+            if (url) Qt.openUrlExternally(url)
+        })
+    }
+
     function openCertificates() {
         if (!certificatesPage || stack.currentPage !== certificatesPage)
             certificatesPage = stack.push(Qt.resolvedUrl('Certificates.qml'), { py: py })
@@ -94,7 +116,7 @@ MainView {
                 if (root.certificatesPage && stack.currentPage === root.certificatesPage)
                     root.certificatesPage.finished(state, message)
             })
-            importModule('hub', function () { root.ready = true; root.refresh() })
+            importModule('hub', function () { root.ready = true; root.refresh(); root.checkPick() })
         }
         onError: console.log('hub: ' + traceback)
     }
@@ -127,7 +149,7 @@ MainView {
     // Back from LibreOffice: show what it saved.
     Connections {
         target: Qt.application
-        onStateChanged: if (Qt.application.state === Qt.ApplicationActive) root.refresh()
+        onStateChanged: if (Qt.application.state === Qt.ApplicationActive) { root.refresh(); root.checkPick() }
     }
 
     Component { id: contentItem; ContentItem {} }
@@ -299,6 +321,35 @@ MainView {
             root.picking = peer.request()
         }
         onCancelPressed: visible = false
+    }
+
+    // For LibreOffice's Open dialog ("Phone files…"): any file, which goes straight back to it.
+    ContentPeerPicker {
+        id: phonePicker
+        anchors.fill: parent
+        visible: false
+        z: 60
+        headerText: 'Pick a file for LibreOffice'
+        contentType: ContentType.All
+        handler: ContentHandler.Source
+        onPeerSelected: {
+            visible = false
+            peer.selectionType = ContentTransfer.Single
+            root.phonePick = peer.request()
+        }
+        onCancelPressed: { visible = false; root.pickDone([]) }
+    }
+    Connections {
+        target: root.phonePick
+        onStateChanged: {
+            var t = root.phonePick
+            if (!t) return
+            if (t.state === ContentTransfer.Charged) {
+                var urls = []
+                for (var i = 0; i < t.items.length; ++i) urls.push(String(t.items[i].url))
+                root.pickDone(urls)
+            } else if (t.state === ContentTransfer.Aborted) { root.phonePick = null; root.pickDone([]) }
+        }
     }
 
     // "Send" (sharing apps: mail, messaging, printing) and "Save to…" (apps that store files, such

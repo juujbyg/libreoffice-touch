@@ -162,6 +162,41 @@ def new_document(kind):
     return _open(kind)
 
 
+# "Phone files…" in LibreOffice's Open dialogs ------------------------------------------------
+# LibreOffice can't read the phone's folders, so the button (native/noparent.c) leaves the suite
+# app's name in PICK_REQUEST and brings up this screen, which offers Content Hub's picker. The file
+# is copied into the documents folder, its path left in PICKED, and the suite app brought back; its
+# dialog, still open, then selects that file.
+PICK_REQUEST = os.path.join(DATA, "pick-request")
+PICKED = os.path.join(DATA, "picked")
+PICK_SECONDS = 120
+
+
+def pick_request():
+    """The suite app (writer, calc...) whose Open dialog asked for a phone file, or "". Used once."""
+    try:
+        age = time.time() - os.stat(PICK_REQUEST).st_mtime
+        with open(PICK_REQUEST, encoding="utf-8") as f:
+            app = f.readline().strip()
+        os.remove(PICK_REQUEST)
+    except OSError:
+        return ""
+    return app if app in KINDS and age < PICK_SECONDS else ""
+
+
+def picked(app, urls):
+    """Copy the file picked for that app's Open dialog into the documents folder and leave its path
+    for the dialog. Returns the address that brings the app back (also when nothing was picked)."""
+    if app not in KINDS:
+        return ""
+    paths = take(urls)
+    if paths:
+        with open(PICKED + ".new", "w", encoding="utf-8") as f:
+            f.write(paths[0] + "\n")
+        os.rename(PICKED + ".new", PICKED)
+    return "appid://%s/%s/current-user-version" % (ID, app)
+
+
 def delete_document(path):
     path = os.path.realpath(path)
     if os.path.dirname(path) != os.path.realpath(DOCS) or not os.path.isfile(path):

@@ -95,7 +95,11 @@ static void wrap_in_scroller(void *w) {
         move_child(top, w, inner);
         CALL(gtk, void, gtk_container_add, (void *, void *))(w, sw);
     }
-    CALL(gtk, void, gtk_widget_show_all, (void *))(sw);
+    /* Only the new scroller and box: the moved widgets keep their own visibility. show_all here
+     * revealed what LibreOffice keeps hidden, such as the Insert Image and Save options that it
+     * builds into every Open dialog. */
+    CALL(gtk, void, gtk_widget_show, (void *))(inner);
+    CALL(gtk, void, gtk_widget_show, (void *))(sw);
 }
 
 static void add_class(void *widget, const char *cls) {
@@ -181,9 +185,11 @@ void gtk_window_set_transient_for(void *window, void *parent) {
 }
 
 static void on_frame_realize(void *w, void *unused);
+static void file_dialog(void *w);
 static void before_show(void *w) {
     if (!w) return;
     if (debug < 0) debug = getenv("LO_SHIM_DEBUG") != NULL;
+    if (is_a(w, "gtk_file_chooser_dialog_get_type")) file_dialog(w);
     if (debug > 0 && is_a(w, "gtk_window_get_type") && !get(w, "lo-shim-seen")) {
         set(w, "lo-shim-seen", (void *)1);
         fprintf(stderr, "lo-shim: show %p type %s parent-key %p\n", w,
@@ -353,7 +359,11 @@ static void scroll_all_but(void *box, void *keep) {
     CALL(glib, void, g_list_free, (GList *))(kids);
     CALL(gtk, void, gtk_box_pack_start, (void *, void *, int, int, unsigned))(box, sw, 1, 1, 0);
     CALL(gtk, void, gtk_box_reorder_child, (void *, void *, int))(box, sw, 0);
-    CALL(gtk, void, gtk_widget_show_all, (void *))(sw);
+    /* Only the new scroller and box: the moved widgets keep their own visibility. show_all here
+     * revealed what LibreOffice keeps hidden, such as the Insert Image and Save options that it
+     * builds into every Open dialog. */
+    CALL(gtk, void, gtk_widget_show, (void *))(inner);
+    CALL(gtk, void, gtk_widget_show, (void *))(sw);
 }
 
 /* Once a parentless window is on screen: if its contents are bigger than the screen (Base's
@@ -482,20 +492,9 @@ void gtk_window_set_title(void *w, const char *title) {
     }
 }
 
+static int snapshot_window(void *w, const char *path);
 static int snapshot(void *button) {
-    const char *path = getenv("LO_SHIM_SNAPSHOT");
-    void *w = CALL(gtk, void *, gtk_widget_get_toplevel, (void *))(button);
-    int ww = CALL(gtk, int, gtk_widget_get_allocated_width, (void *))(w);
-    int hh = CALL(gtk, int, gtk_widget_get_allocated_height, (void *))(w);
-    if (path && ww > 0 && hh > 0) {
-        void *surface = CALL(cairo, void *, cairo_image_surface_create, (int, int, int))(0 /* ARGB32 */, ww, hh);
-        void *cr = CALL(cairo, void *, cairo_create, (void *))(surface);
-        CALL(gtk, void, gtk_widget_draw, (void *, void *))(w, cr);
-        CALL(cairo, int, cairo_surface_write_to_png, (void *, const char *))(surface, path);
-        CALL(cairo, void, cairo_destroy, (void *))(cr);
-        CALL(cairo, void, cairo_surface_destroy, (void *))(surface);
-        fprintf(stderr, "lo-shim: snapshot %dx%d saved\n", ww, hh);
-    }
+    snapshot_window(CALL(gtk, void *, gtk_widget_get_toplevel, (void *))(button), getenv("LO_SHIM_SNAPSHOT"));
     CALL(gob, void, g_object_unref, (void *))(button);
     return 0;
 }
@@ -556,6 +555,199 @@ void *gtk_menu_bar_new_from_model(void *model) {
     return m;
 }
 
+/* ---- Open and Save dialogs -------------------------------------------------------------------
+ * The sandbox can't read the phone's folders, and bin/office makes HOME the app's documents folder,
+ * so GTK's "Home" is the one place LibreOffice can use. The sidebar loses Recent (GTK's list is
+ * outside the sandbox) and Other Locations (mounts it can't read). An Open dialog gets a "Phone
+ * files…" button: it leaves this suite app's name in $XDG_DATA_HOME/<package>/pick-request and
+ * brings up the start screen (start/hub.py, pick_request), which offers Content Hub's picker, copies
+ * the file into the documents folder, writes its path to .../picked and brings this app back. The
+ * dialog, still open, then selects that file.
+ * LO_SHIM_TEST_DIALOG=<seconds> (tests): draws the dialog into LO_SHIM_SNAPSHOT, presses the button
+ * without bringing up the start screen, selects the file named by LO_SHIM_TEST_PICKED as if it had
+ * been picked, draws the dialog again into <LO_SHIM_SNAPSHOT>.after.png and cancels it. A Save
+ * dialog is only drawn into <LO_SHIM_SNAPSHOT>.after.png and cancelled. */
+static const char FILES[] = "lo-shim-files", PICKING[] = "lo-shim-picking";
+
+/* $XDG_DATA_HOME/<package>/<name>, and the suite app's name (writer...), from APP_ID. */
+static int app_file(char *out, size_t size, const char *name, char *app, size_t app_size) {
+    const char *id = getenv("APP_ID"), *data = getenv("XDG_DATA_HOME");
+    size_t n = id ? strcspn(id, "_") : 0;
+    if (!data || !n || !id[n] || n > 100) return 0;
+    size_t m = strcspn(id + n + 1, "_");
+    if (!m || m >= app_size) return 0;
+    snprintf(app, app_size, "%.*s", (int)m, id + n + 1);
+    return snprintf(out, size, "%s/%.*s/%s", data, (int)n, id, name) < (int)size;
+}
+
+static int snapshot_window(void *w, const char *path) {
+    int ww = CALL(gtk, int, gtk_widget_get_allocated_width, (void *))(w);
+    int hh = CALL(gtk, int, gtk_widget_get_allocated_height, (void *))(w);
+    if (!path || ww <= 0 || hh <= 0) return 0;
+    void *surface = CALL(cairo, void *, cairo_image_surface_create, (int, int, int))(0 /* ARGB32 */, ww, hh);
+    void *cr = CALL(cairo, void *, cairo_create, (void *))(surface);
+    CALL(gtk, void, gtk_widget_draw, (void *, void *))(w, cr);
+    CALL(cairo, int, cairo_surface_write_to_png, (void *, const char *))(surface, path);
+    CALL(cairo, void, cairo_destroy, (void *))(cr);
+    CALL(cairo, void, cairo_surface_destroy, (void *))(surface);
+    fprintf(stderr, "lo-shim: snapshot %dx%d saved\n", ww, hh);
+    return 1;
+}
+
+static void on_phone_files(void *button, void *unused) {
+    (void)unused;
+    void *w = CALL(gtk, void *, gtk_widget_get_toplevel, (void *))(button);
+    char path[700], app[64];
+    if (!app_file(path, sizeof path, "picked", app, sizeof app)) return;
+    unlink(path); /* a file picked for an earlier dialog */
+    app_file(path, sizeof path, "pick-request", app, sizeof app);
+    FILE *f = fopen(path, "w");
+    if (!f) { fprintf(stderr, "lo-shim: phone files: can't write the request\n"); return; }
+    fprintf(f, "%s\n", app);
+    fclose(f);
+    set(w, PICKING, (void *)1);
+    if (debug) fprintf(stderr, "lo-shim: phone files asked for %s\n", app);
+    if (!getenv("LO_SHIM_TEST_DIALOG")) show_start_screen();
+}
+
+/* Back from the start screen: select the file it copied in. Only a file in the documents folder. */
+static int select_picked(void *w) {
+    char path[700], app[64], picked[1024] = "", folder[700];
+    if (get(w, PICKING) && app_file(path, sizeof path, "picked", app, sizeof app)) {
+        FILE *f = fopen(path, "r");
+        if (f) {
+            if (!fgets(picked, sizeof picked, f)) picked[0] = 0;
+            fclose(f);
+            unlink(path);
+            picked[strcspn(picked, "\n")] = 0;
+            app_file(folder, sizeof folder, "Documents/", app, sizeof app);
+            if (!strncmp(picked, folder, strlen(folder)) && !strstr(picked, "/..") && !strchr(picked + strlen(folder), '/')) {
+                set(w, PICKING, NULL);
+                CALL(gtk, int, gtk_file_chooser_set_filename, (void *, const char *))(w, picked);
+                if (debug) fprintf(stderr, "lo-shim: phone files: selected %s\n", picked);
+            }
+        }
+    }
+    CALL(gob, void, g_object_unref, (void *))(w);
+    return 0;
+}
+
+/* The dialog's app is in front again. The copy's folder listing may still be catching up (the app
+ * was suspended while the start screen was up), so the file is selected a little later. */
+static void on_dialog_active(void *w, void *pspec, void *unused) {
+    (void)pspec; (void)unused;
+    if (!get(w, PICKING) || !CALL(gtk, int, gtk_window_is_active, (void *))(w)) return;
+    CALL(gob, void *, g_object_ref, (void *))(w);
+    CALL(glib, unsigned, g_timeout_add, (unsigned, int (*)(void *), void *))(700, select_picked, w);
+}
+
+static int test_after(void *w) {
+    char path[600], *chosen = CALL(gtk, char *, gtk_file_chooser_get_filename, (void *))(w);
+    fprintf(stderr, "lo-shim: test dialog: chosen %s\n", chosen ? chosen : "(none)");
+    CALL(glib, void, g_free, (void *))(chosen);
+    const char *snap = getenv("LO_SHIM_SNAPSHOT");
+    if (snap) { snprintf(path, sizeof path, "%s.after.png", snap); snapshot_window(w, path); }
+    CALL(gtk, void, gtk_dialog_response, (void *, int))(w, -6 /* GTK_RESPONSE_CANCEL */);
+    CALL(gob, void, g_object_unref, (void *))(w);
+    return 0;
+}
+static int test_pick(void *w) {
+    char path[700], app[64];
+    const char *file = getenv("LO_SHIM_TEST_PICKED");
+    if (file && app_file(path, sizeof path, "picked", app, sizeof app)) {
+        FILE *f = fopen(path, "w");
+        if (f) { fprintf(f, "%s\n", file); fclose(f); }
+    }
+    CALL(gob, void *, g_object_ref, (void *))(w);
+    select_picked(w); /* drops that reference */
+    CALL(gob, void *, g_object_ref, (void *))(w); /* test_after drops this one */
+    CALL(glib, unsigned, g_timeout_add_seconds, (unsigned, int (*)(void *), void *))(2, test_after, w);
+    return 0;
+}
+static int test_press(void *button) {
+    void *w = CALL(gtk, void *, gtk_widget_get_toplevel, (void *))(button);
+    snapshot_window(w, getenv("LO_SHIM_SNAPSHOT"));
+    CALL(gtk, void, gtk_button_clicked, (void *))(button);
+    char path[700], app[64], line[64] = "";
+    if (app_file(path, sizeof path, "pick-request", app, sizeof app)) {
+        FILE *f = fopen(path, "r");
+        if (f) { if (!fgets(line, sizeof line, f)) line[0] = 0; fclose(f); }
+    }
+    fprintf(stderr, "lo-shim: test dialog: request %s", line[0] ? line : "missing\n");
+    CALL(glib, unsigned, g_timeout_add_seconds, (unsigned, int (*)(void *), void *))(1, test_pick, w);
+    CALL(gob, void, g_object_unref, (void *))(button);
+    return 0;
+}
+
+/* A sidebar row for the phone's root folder ("Computer"): the sandbox can't read what's in it. The
+ * rows have a "uri" property (a GTK-private type, so it's looked up by name), and the sidebar remakes
+ * them whenever its places change, so each row is checked as it's added. */
+static void hide_root_row(void *list, void *row, void *unused) {
+    (void)list; (void)unused;
+    if (!CALL(gob, void *, g_object_class_find_property, (void *, const char *))(*(void **)row, "uri")) return;
+    char *uri = NULL;
+    CALL(gob, void, g_object_get, (void *, const char *, ...))(row, "uri", &uri, NULL);
+    if (uri && !strcmp(uri, "file:///")) {
+        /* GTK shows each new row with gtk_widget_show_all right after adding it, which no_show_all stops. */
+        CALL(gtk, void, gtk_widget_set_no_show_all, (void *, int))(row, 1);
+        CALL(gtk, void, gtk_widget_hide, (void *))(row);
+    }
+    if (debug) fprintf(stderr, "lo-shim: sidebar row %s\n", uri ? uri : "(no uri)");
+    CALL(glib, void, g_free, (void *))(uri);
+}
+static void hide_root_rows(void *row, void *list) { hide_root_row(list, row, NULL); }
+
+static void file_dialog(void *w) {
+    if (get(w, FILES)) return;
+    set(w, FILES, (void *)1);
+    void *sidebar = find(w, "gtk_places_sidebar_get_type", NULL);
+    if (sidebar) {
+        /* Recent and the trash are outside the sandbox, and Other Locations lists mounts it can't read. */
+        CALL(gtk, void, gtk_places_sidebar_set_show_recent, (void *, int))(sidebar, 0);
+        CALL(gtk, void, gtk_places_sidebar_set_show_trash, (void *, int))(sidebar, 0);
+        CALL(gtk, void, gtk_places_sidebar_set_show_other_locations, (void *, int))(sidebar, 0);
+        void *list = find(sidebar, "gtk_list_box_get_type", NULL);
+        if (list) {
+            CALL(gtk, void, gtk_container_foreach, (void *, void *, void *))(list, (void *)hide_root_rows, list);
+            CALL(gob, unsigned long, g_signal_connect_data, (void *, const char *, void *, void *, void *, int))(
+                list, "add", (void *)hide_root_row, NULL, NULL, 1 /* G_CONNECT_AFTER */);
+        }
+    }
+    char path[700], app[64];
+    const char *test = getenv("LO_SHIM_TEST_DIALOG");
+    if (CALL(gtk, int, gtk_file_chooser_get_action, (void *))(w) != 0 /* GTK_FILE_CHOOSER_ACTION_OPEN */) {
+        /* Save dialogs have no button; the test only draws them (into <LO_SHIM_SNAPSHOT>.after.png) and cancels. */
+        if (test && atoi(test) > 0) {
+            CALL(gob, void *, g_object_ref, (void *))(w);
+            CALL(glib, unsigned, g_timeout_add_seconds, (unsigned, int (*)(void *), void *))((unsigned)atoi(test), test_after, w);
+        }
+        return;
+    }
+    if (!app_file(path, sizeof path, "pick-request", app, sizeof app)) return;
+    void *b = CALL(gtk, void *, gtk_button_new_with_label, (const char *))("Phone files…");
+    CALL(gtk, void, gtk_widget_set_tooltip_text, (void *, const char *))(b,
+        "Pick a file from the phone (Files, Downloads…): it's copied into LibreOffice's documents and selected here");
+    add_class(b, "lo-phone-files");
+    CALL(gob, unsigned long, g_signal_connect_data, (void *, const char *, void *, void *, void *, int))(
+        b, "clicked", (void *)on_phone_files, NULL, NULL, 0);
+    void *bar = CALL(gtk, void *, gtk_dialog_get_header_bar, (void *))(w);
+    if (bar) CALL(gtk, void, gtk_header_bar_pack_start, (void *, void *))(bar, b);
+    else {
+        void *area = CALL(gtk, void *, gtk_dialog_get_action_area, (void *))(w);
+        CALL(gtk, void, gtk_box_pack_start, (void *, void *, int, int, unsigned))(area, b, 0, 0, 0);
+        if (is_a(area, "gtk_button_box_get_type"))
+            CALL(gtk, void, gtk_button_box_set_child_secondary, (void *, void *, int))(area, b, 1);
+    }
+    CALL(gtk, void, gtk_widget_show, (void *))(b);
+    CALL(gob, unsigned long, g_signal_connect_data, (void *, const char *, void *, void *, void *, int))(
+        w, "notify::is-active", (void *)on_dialog_active, NULL, NULL, 0);
+    if (debug) fprintf(stderr, "lo-shim: phone files button added to %p (%s)\n", w, bar ? "header bar" : "button row");
+    if (test && atoi(test) > 0) {
+        CALL(gob, void *, g_object_ref, (void *))(b);
+        CALL(glib, unsigned, g_timeout_add_seconds, (unsigned, int (*)(void *), void *))((unsigned)atoi(test), test_press, b);
+    }
+}
+
 /* ---- On-screen keyboard -----------------------------------------------------------------------
  * LibreOffice drives Lomiri's keyboard through a GtkIMContext (the Maliit GTK module in lib/). The
  * module shows the keyboard on every focus_in, and LibreOffice calls focus_in whenever its document
@@ -570,9 +762,9 @@ void *gtk_menu_bar_new_from_model(void *model) {
 static int im_trace = -1;
 static long now_ms(void) { struct timespec t; clock_gettime(CLOCK_MONOTONIC, &t); return t.tv_sec * 1000 + t.tv_nsec / 1000000; }
 static int trace_on(void) {
-    char path[512]; const char *home = getenv("HOME");
+    char path[512]; const char *cache = getenv("XDG_CACHE_HOME"); /* bin/office moves HOME */
     if (getenv("LO_SHIM_IM_TRACE")) return 1;
-    snprintf(path, sizeof path, "%s/.cache/libreoffice.juujbyg/im-trace", home ? home : "");
+    snprintf(path, sizeof path, "%s/libreoffice.juujbyg/im-trace", cache ? cache : "");
     return access(path, F_OK) == 0;
 }
 #define TRACE(...) do { if (im_trace < 0) im_trace = trace_on(); \

@@ -54,3 +54,16 @@ assert not info["office"] and info["ui"] == "pt-BR" and all("sha256" not in i fo
 assert [i["code"] for i in info["items"] if i["installed"]] == ["pt-BR"]
 assert hub.set_ui_language("") and hub.ui_language() == "" and not os.path.exists(hub.UI_LANGUAGE)
 print("ok languages page backend")
+
+open(hub.PICK_REQUEST, "w").write("calc\n")
+assert hub.pick_request() == "calc" and hub.pick_request() == "", "a pick request is used once"
+open(hub.PICK_REQUEST, "w").write("../../x\n")
+assert hub.pick_request() == "" and not os.path.exists(hub.PICK_REQUEST)
+open(hub.PICK_REQUEST, "w").write("writer\n"); old = time.time() - 600; os.utime(hub.PICK_REQUEST, (old, old))
+assert hub.pick_request() == "", "an old request is ignored"
+assert hub.picked("calc", []) == "appid://libreoffice.juujbyg/calc/current-user-version" and not os.path.exists(hub.PICKED)
+assert hub.picked("calc", ["file://" + src]) == "appid://libreoffice.juujbyg/calc/current-user-version"
+got = open(hub.PICKED).read()
+assert got.startswith(hub.DOCS + "/Report final") and os.path.isfile(got.strip()), got
+assert hub.picked("evil", ["file://" + src]) == ""
+print("ok phone files for the Open dialog: one-time request, copy in, path left for the dialog")
