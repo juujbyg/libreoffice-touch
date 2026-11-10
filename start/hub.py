@@ -63,8 +63,10 @@ def _local_path(url):
 
 
 def _free_name(name):
-    """A name in DOCS that isn't taken: 'Report.docx', then 'Report (2).docx' and so on."""
-    base, ext = os.path.splitext(os.path.basename(name) or "Document")
+    """A name in DOCS that isn't taken: 'Report.docx', then 'Report (2).docx' and so on. Leading dots
+    are dropped: DOCS is LibreOffice's HOME (bin/office), so an imported '.fonts.conf' or '.themes'
+    would otherwise be read as configuration."""
+    base, ext = os.path.splitext(os.path.basename(name).lstrip(".") or "Document")
     candidate, n = base + ext, 2
     while os.path.exists(os.path.join(DOCS, candidate)):
         candidate, n = "%s (%d)%s" % (base, n, ext), n + 1

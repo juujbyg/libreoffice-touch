@@ -66,4 +66,9 @@ assert hub.picked("calc", ["file://" + src]) == "appid://libreoffice.juujbyg/cal
 got = open(hub.PICKED).read()
 assert got.startswith(hub.DOCS + "/Report final") and os.path.isfile(got.strip()), got
 assert hub.picked("evil", ["file://" + src]) == ""
+dot = os.path.join(os.path.dirname(src), ".fonts.conf"); open(dot, "w").write("<fontconfig/>")
+taken = hub.take(["file://" + dot])
+assert [os.path.basename(p) for p in taken] == ["fonts.conf"], taken
+assert not os.path.exists(os.path.join(hub.DOCS, ".fonts.conf")), "a dotfile never lands in LibreOffice's HOME"
+assert hub._free_name("...") == "Document"
 print("ok phone files for the Open dialog: one-time request, copy in, path left for the dialog")
