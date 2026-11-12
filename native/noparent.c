@@ -74,6 +74,19 @@ static void move_child(void *child, void *from, void *to) {
     CALL(gob, void, g_object_unref, (void *))(child);
 }
 
+static int scroll_to_left(void *sw) {
+    void *h = CALL(gtk, void *, gtk_scrolled_window_get_hadjustment, (void *))(sw);
+    if (h) CALL(gtk, void, gtk_adjustment_set_value, (void *, double))(h, CALL(gtk, double, gtk_adjustment_get_lower, (void *))(h));
+    CALL(gob, void, g_object_unref, (void *))(sw);
+    return 0;
+}
+static void on_scroller_map(void *sw, void *unused) {
+    (void)unused;
+    /* After LibreOffice has set the focus, which scrolls the viewport to the focused widget. */
+    CALL(gob, void *, g_object_ref, (void *))(sw);
+    CALL(glib, unsigned, g_timeout_add, (unsigned, int (*)(void *), void *))(150, scroll_to_left, sw);
+}
+
 static void wrap_in_scroller(void *w) {
     void *top = CALL(gtk, void *, gtk_bin_get_child, (void *))(w);
     if (!top) return;
@@ -84,10 +97,14 @@ static void wrap_in_scroller(void *w) {
     void *action = NULL;
     if (is_a(w, "gtk_dialog_get_type") && is_a(top, "gtk_box_get_type")) {
         /* GtkDialog: scroll everything except the button row. */
+        /* GTK keeps the button box (the action area) inside an "action box" of its own, and that
+         * box is the child of `top`: leaving only the button box out moved the buttons into the
+         * scrolled area too, where OK could end up past the right edge (Calc's Text Import). */
         action = CALL(gtk, void *, gtk_dialog_get_action_area, (void *))(w);
+        void *action_box = action ? CALL(gtk, void *, gtk_widget_get_parent, (void *))(action) : NULL;
         GList *kids = CALL(gtk, GList *, gtk_container_get_children, (void *))(top);
         for (GList *l = kids; l; l = l->next)
-            if (l->data != action) move_child(l->data, top, inner);
+            if (l->data != action && l->data != action_box) move_child(l->data, top, inner);
         CALL(glib, void, g_list_free, (GList *))(kids);
         CALL(gtk, void, gtk_box_pack_start, (void *, void *, int, int, unsigned))(top, sw, 1, 1, 0);
         CALL(gtk, void, gtk_box_reorder_child, (void *, void *, int))(top, sw, 0);
@@ -100,6 +117,10 @@ static void wrap_in_scroller(void *w) {
      * builds into every Open dialog. */
     CALL(gtk, void, gtk_widget_show, (void *))(inner);
     CALL(gtk, void, gtk_widget_show, (void *))(sw);
+    /* A sheet wider than the screen starts at its left edge, where the labels are. Without this
+     * the viewport followed the focused widget (often a button at the right) and opened halfway. */
+    CALL(gob, unsigned long, g_signal_connect_data, (void *, const char *, void *, void *, void *, int))(
+        sw, "map", (void *)on_scroller_map, NULL, NULL, 0);
 }
 
 static void add_class(void *widget, const char *cls) {
@@ -364,6 +385,10 @@ static void scroll_all_but(void *box, void *keep) {
      * builds into every Open dialog. */
     CALL(gtk, void, gtk_widget_show, (void *))(inner);
     CALL(gtk, void, gtk_widget_show, (void *))(sw);
+    /* A sheet wider than the screen starts at its left edge, where the labels are. Without this
+     * the viewport followed the focused widget (often a button at the right) and opened halfway. */
+    CALL(gob, unsigned long, g_signal_connect_data, (void *, const char *, void *, void *, void *, int))(
+        sw, "map", (void *)on_scroller_map, NULL, NULL, 0);
 }
 
 /* Once a parentless window is on screen: if its contents are bigger than the screen (Base's
@@ -904,6 +929,21 @@ typedef struct { int type; void *window; signed char send_event; short in; } EvF
 static int on_configure(void *w, EvConfigure *e, void *u) { (void)u; TRACE("configure %p %dx%d at %d,%d", w, e->width, e->height, e->x, e->y); return 0; }
 static int on_state(void *w, EvState *e, void *u) { (void)u; TRACE("state %p changed=%#x now=%#x", w, e->changed, e->state); return 0; }
 static int on_focus(void *w, EvFocus *e, void *u) { (void)u; TRACE("window_focus %p %s", w, e->in ? "in" : "out"); return 0; }
+/* Tests: with snap-request, also print each window's widget tree (type, x, width, min width). */
+static void dump_tree(void *w, int depth) {
+    Rect r; Req mn, nt;
+    CALL(gtk, void, gtk_widget_get_allocation, (void *, Rect *))(w, &r);
+    CALL(gtk, void, gtk_widget_get_preferred_size, (void *, Req *, Req *))(w, &mn, &nt);
+    fprintf(stderr, "lo-tree %*s%s x=%d w=%d min=%d nat=%d%s\n", depth * 2, "",
+            CALL(gob, const char *, g_type_name_from_instance, (void *))(w), r.x, r.width, mn.width, nt.width,
+            CALL(gtk, int, gtk_widget_get_visible, (void *))(w) ? "" : " (hidden)");
+    if (depth < 9 && is_a(w, "gtk_container_get_type")) {
+        GList *kids = CALL(gtk, GList *, gtk_container_get_children, (void *))(w);
+        for (GList *l = kids; l; l = l->next) dump_tree(l->data, depth + 1);
+        CALL(glib, void, g_list_free, (GList *))(kids);
+    }
+}
+
 /* Tests (only while tracing, see trace_on): creating ~/.cache/libreoffice.juujbyg/snap-request makes
  * the shim draw every visible window into snap-<n>.png in that folder, then remove the request.
  * Lomiri's screen capture stops working at times; this doesn't depend on it. */
@@ -920,6 +960,7 @@ static int snap_check(void *unused) {
         if (CALL(gtk, int, gtk_widget_get_visible, (void *))(l->data)) {
             snprintf(out, sizeof out, "%s/snap-%d.png", dir, n++);
             snapshot_window(l->data, out);
+            if (debug > 0) dump_tree(l->data, 0);
         }
     CALL(glib, void, g_list_free, (GList *))(all);
     return 1;
