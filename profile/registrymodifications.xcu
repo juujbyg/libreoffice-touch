@@ -5,8 +5,11 @@
 <item oor:path="/org.openoffice.Office.Writer/Layout/Zoom"><prop oor:name="Type" oor:op="fuse"><value>3</value></prop></item>
 <item oor:path="/org.openoffice.Office.Impress/MultiPaneGUI/SlideSorterBar/Visible"><prop oor:name="ImpressView" oor:op="fuse"><value>false</value></prop></item>
 <item oor:path="/org.openoffice.Office.Impress/MultiPaneGUI/SlideSorterBar/Visible"><prop oor:name="DrawView" oor:op="fuse"><value>false</value></prop></item>
-<item oor:path="/org.openoffice.Office.Views/Windows/org.openoffice.Office.Views:WindowType['sdraw/10336']/UserData"><prop oor:name="Data" oor:op="fuse" oor:type="xs:string"><value>V2,V,0,AL:(5,16,0/0/48/450,48;450)</value></prop></item>
-<item oor:path="/org.openoffice.Office.Views/Windows/org.openoffice.Office.Views:WindowType['simpress/10336']/UserData"><prop oor:name="Data" oor:op="fuse" oor:type="xs:string"><value>V2,V,0,AL:(5,16,0/0/48/450,48;450)</value></prop></item>
+<item oor:path="/org.openoffice.Office.Views/Windows/org.openoffice.Office.Views:WindowType['sdraw/10336']/UserData"><prop oor:name="Data" oor:op="fuse" oor:type="xs:string"><value>V2,H,0,AL:(5,16,0/0/48/450,48;450)</value></prop></item>
+<item oor:path="/org.openoffice.Office.Views/Windows/org.openoffice.Office.Views:WindowType['simpress/10336']/UserData"><prop oor:name="Data" oor:op="fuse" oor:type="xs:string"><value>V2,H,0,AL:(5,16,0/0/48/450,48;450)</value></prop></item>
 <item oor:path="/org.openoffice.Office.Views/Windows/org.openoffice.Office.Views:WindowType['smath/10336']/UserData"><prop oor:name="Data" oor:op="fuse" oor:type="xs:string"><value>V2,V,0,AL:(5,16,0/0/48/450,48;450)</value></prop></item>
+<item oor:path="/org.openoffice.Office.Views/Windows/org.openoffice.Office.Views:WindowType['swriter/10336']/UserData"><prop oor:name="Data" oor:op="fuse" oor:type="xs:string"><value>V2,H,0,AL:(5,16,0/0/48/450,48;450)</value></prop></item>
+<item oor:path="/org.openoffice.Office.Views/Windows/org.openoffice.Office.Views:WindowType['scalc/10336']/UserData"><prop oor:name="Data" oor:op="fuse" oor:type="xs:string"><value>V2,H,0,AL:(5,16,0/0/48/450,48;450)</value></prop></item>
 <item oor:path="/org.openoffice.Office.Events/ApplicationEvents/Bindings"><node oor:name="OnLoad" oor:op="replace"><prop oor:name="BindingURL" oor:op="fuse"><value>vnd.sun.star.script:Standard.PhoneView.FitWidth?language=Basic&amp;location=application</value></prop></node></item>
+<item oor:path="/org.openoffice.Office.Events/ApplicationEvents/Bindings"><node oor:name="OnViewCreated" oor:op="replace"><prop oor:name="BindingURL" oor:op="fuse"><value>vnd.sun.star.script:Standard.PhoneView.FitWidth?language=Basic&amp;location=application</value></prop></node></item>
 </oor:items>

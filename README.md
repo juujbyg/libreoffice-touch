@@ -19,8 +19,11 @@ trademarks. The LibreOffice program is installed unmodified, exactly as The Docu
 - **Phone-sized interface** (`bin/office`):
   - `SAL_FORCEDPI=192` and `GDK_DPI_SCALE=1.8` give large toolbars, menus and text. Base uses 1.2, because
     its Database Wizard is a fixed-size window that can't scroll.
-  - The `LibreOfficePhone` GTK theme (`share/themes/`) makes buttons, menus, tabs, entries, scrollbars and the
-    file picker finger-sized.
+  - The `LibreOfficePhone` GTK theme (`share/themes/`) makes buttons, menus, tabs, entries, scrollbars,
+    the file picker and the close buttons on title bars and sidebar panels finger-sized.
+- **Touch** (`native/noparent.c`): drag one finger to scroll the page (it keeps gliding if you flick), tap
+  to place the cursor, press and hold then drag to select, pinch with two fingers to zoom. LibreOffice
+  itself treats a finger like a mouse, so dragging used to select text.
 - **Dialogs as phone sheets** (`native/noparent.c`, loaded with `LD_PRELOAD`):
   - The problem: Mir places a dialog as if it were 640x480, about 220 px from the left, and never moves it.
   - The fix: every dialog is shown maximised. Small ones are a card centred on a grey backdrop, large ones
@@ -30,7 +33,8 @@ trademarks. The LibreOffice program is installed unmodified, exactly as The Docu
   - large icons;
   - Writer at page width, and documents opened at page width by a small macro that only sets the zoom;
   - the slide and page lists in Impress and Draw hidden;
-  - sidebars folded to their icon strip.
+  - the sidebar hidden in Writer, Calc, Impress and Draw (View > Sidebar brings it back), and folded to
+    its icon strip in Math. Profiles made by older versions get these once, on the first start of 0.4.8.
 - **On-screen keyboard:** Lomiri's keyboard works through the Maliit GTK input module (`lib/`, from
   Ubuntu's archive). It comes up when you tap where the text goes (the page, or a text field in a
   dialog), not when you open a menu or a dialog; drag the keyboard down, or drag the page, to put it

@@ -904,13 +904,257 @@ typedef struct { int type; void *window; signed char send_event; short in; } EvF
 static int on_configure(void *w, EvConfigure *e, void *u) { (void)u; TRACE("configure %p %dx%d at %d,%d", w, e->width, e->height, e->x, e->y); return 0; }
 static int on_state(void *w, EvState *e, void *u) { (void)u; TRACE("state %p changed=%#x now=%#x", w, e->changed, e->state); return 0; }
 static int on_focus(void *w, EvFocus *e, void *u) { (void)u; TRACE("window_focus %p %s", w, e->in ? "in" : "out"); return 0; }
+/* Tests (only while tracing, see trace_on): creating ~/.cache/libreoffice.juujbyg/snap-request makes
+ * the shim draw every visible window into snap-<n>.png in that folder, then remove the request.
+ * Lomiri's screen capture stops working at times; this doesn't depend on it. */
+static int snap_check(void *unused) {
+    (void)unused;
+    char dir[512], req[600], out[600]; const char *cache = getenv("XDG_CACHE_HOME");
+    snprintf(dir, sizeof dir, "%s/libreoffice.juujbyg", cache ? cache : "");
+    snprintf(req, sizeof req, "%s/snap-request", dir);
+    if (access(req, F_OK) != 0) return 1;
+    unlink(req);
+    GList *all = CALL(gtk, GList *, gtk_window_list_toplevels, (void))(), *l;
+    int n = 0;
+    for (l = all; l; l = l->next)
+        if (CALL(gtk, int, gtk_widget_get_visible, (void *))(l->data)) {
+            snprintf(out, sizeof out, "%s/snap-%d.png", dir, n++);
+            snapshot_window(l->data, out);
+        }
+    CALL(glib, void, g_list_free, (GList *))(all);
+    return 1;
+}
+
 static void trace_window(void *w) {
     watch_taps();
     if (im_trace < 0) im_trace = trace_on();
     if (!im_trace) return;
+    static int snapping;
+    if (!snapping++) CALL(glib, unsigned, g_timeout_add, (unsigned, int (*)(void *), void *))(500, snap_check, NULL);
     unsigned long (*connect)(void *, const char *, void *, void *, void *, int) = gob("g_signal_connect_data");
     connect(w, "configure-event", (void *)on_configure, NULL, NULL, 0);
     connect(w, "window-state-event", (void *)on_state, NULL, NULL, 0);
     connect(w, "focus-in-event", (void *)on_focus, NULL, NULL, 0);
     connect(w, "focus-out-event", (void *)on_focus, NULL, NULL, 0);
+}
+
+/* ---- One-finger scrolling -----------------------------------------------------------------------
+ * LibreOffice treats a finger on the page like a mouse: dragging selected text, so documents could
+ * only be moved with the thin scrollbars. Every event passes through GDK's event handler, which GTK
+ * installs with gdk_event_handler_set; the shim wraps that handler. The first finger on a page drawn
+ * by LibreOffice (its OOoFixed widget: the document, rulers and toolbars, not GTK's own widgets in
+ * dialogs) is held back:
+ *  - lifted without moving far: LibreOffice gets the press and release (a tap places the cursor);
+ *  - moved more than SLOP px: it becomes smooth scroll events, and LibreOffice never sees the press,
+ *    so nothing is selected; lifting while moving fast keeps it gliding (kinetic);
+ *  - held still for HOLD ms: LibreOffice gets the press, so press-and-hold then drag selects;
+ *  - a second finger: both go to LibreOffice (pinch to zoom), but the first one no longer drives
+ *    the pointer, so zooming doesn't select text as well.
+ * A touch arrives as touch events (on windows that take them, like the page, which has gestures)
+ * or as mouse events emulated from the first touch; both are handled. LO_SHIM_SCROLL_PX sets how
+ * many pixels of finger travel make one mouse-wheel step (3 lines in LibreOffice), and
+ * LO_SHIM_NO_SCROLL=1 turns all of this off. */
+#include <math.h>
+enum { SCROLL = 31, SMOOTH = 4, SRC_TOUCHSCREEN = 5, SLOP = 24, HOLD = 450 };
+typedef void (*EventFunc)(void *event, void *data);
+static EventFunc real_handler;
+static void *real_data;
+typedef struct { int type; void *window; signed char send_event; unsigned time; double x, y;
+    unsigned state; int direction; void *device; double x_root, y_root, delta_x, delta_y; unsigned is_stop : 1; } EvScroll;
+typedef struct { int type; void *window; signed char send_event; unsigned time; double x, y; double *axes;
+    unsigned state; void *sequence; int emulating_pointer; void *device; double x_root, y_root; } EvTouch;
+
+static enum { T_IDLE, T_PENDING, T_SCROLL, T_PASS, T_PINCH } tstate;
+static void *held;        /* the first press, copied, while it is held back */
+static void *last_move;   /* a copy of the last finger event: window, device and position for scrolls */
+static double sx, sy, lx, ly, vx, vy;
+static unsigned last_ms, hold_timer, glide_timer;
+static double px_per_step = -1;
+
+static void deliver(void *e) { real_handler(e, real_data); }
+static int ev_type(void *e) { return *(int *)e; }
+static void *ev_window(void *e) { return ((void **)e)[1]; }
+static unsigned ev_time(void *e) { return CALL(gdk, unsigned, gdk_event_get_time, (void *))(e); }
+static int coords(void *e, double *x, double *y) {
+    return CALL(gdk, int, gdk_event_get_coords, (void *, double *, double *))(e, x, y);
+}
+static int from_touchscreen(void *e) {
+    void *d = CALL(gdk, void *, gdk_event_get_source_device, (void *))(e);
+    return d && CALL(gdk, int, gdk_device_get_source, (void *))(d) == SRC_TOUCHSCREEN;
+}
+/* What a finger event is: 1 first finger down, 2 it moves, 3 it is lifted, 4 another finger down,
+ * 0 anything else. */
+static int finger(void *e) {
+    int t = ev_type(e);
+    if (t == TOUCH_BEGIN || t == TOUCH_UPDATE || t == TOUCH_END || t == TOUCH_CANCEL) {
+        int primary = ((EvTouch *)e)->emulating_pointer; /* the first finger, which also drives the pointer */
+        if (!primary) return t == TOUCH_BEGIN ? 4 : 0;
+        return t == TOUCH_BEGIN ? 1 : t == TOUCH_UPDATE ? 2 : 3;
+    }
+    if (!from_touchscreen(e)) return 0;
+    if (t == PRESS) { unsigned b = 0; CALL(gdk, int, gdk_event_get_button, (void *, unsigned *))(e, &b); return b == 1 ? 1 : 0; }
+    if (t == MOTION) return 2;
+    if (t == RELEASE) return 3;
+    return 0;
+}
+/* A window LibreOffice draws itself (its GtkSalFrame): an event box in a grid, straight in the
+ * GtkWindow. That covers the document with its rulers, toolbars and status bar; dialogs built from
+ * GTK widgets are left alone, so their lists, sliders and text fields work as usual. */
+static int is_type(void *w, const char *name) {
+    const char *n = w ? CALL(gob, const char *, g_type_name_from_instance, (void *))(w) : NULL;
+    return n && strcmp(n, name) == 0;
+}
+static int lo_page(void *gdkwin) {
+    void *w = NULL;
+    if (!gdkwin) return 0;
+    CALL(gdk, void, gdk_window_get_user_data, (void *, void **))(gdkwin, &w);
+    if (!is_type(w, "GtkEventBox")) return 0;
+    void *grid = CALL(gtk, void *, gtk_widget_get_parent, (void *))(w);
+    if (!is_type(grid, "GtkGrid")) return 0;
+    void *top = CALL(gtk, void *, gtk_widget_get_parent, (void *))(grid);
+    return top && is_a(top, "gtk_window_get_type");
+}
+static void forget(void **e) { if (*e) { CALL(gdk, void, gdk_event_free, (void *))(*e); *e = NULL; } }
+static void stop_timer(unsigned *id) { if (*id) { CALL(glib, int, g_source_remove, (unsigned))(*id); *id = 0; } }
+static void keep(void **slot, void *e) { forget(slot); *slot = CALL(gdk, void *, gdk_event_copy, (void *))(e); }
+
+/* A smooth scroll by (dx, dy) pixels of finger travel, at the last finger position. */
+static void scroll_by(double dx, double dy, int stop) {
+    if (!last_move) return;
+    if (px_per_step < 0) {
+        const char *v = getenv("LO_SHIM_SCROLL_PX");
+        px_per_step = v ? atof(v) : 0;
+        if (px_per_step <= 0) px_per_step = 60; /* 1:1 with the finger at 192 dpi */
+    }
+    /* Calc scrolls a row per line, about twice as far as Writer's line: half the speed there. */
+    double step = px_per_step;
+    void *w = NULL;
+    CALL(gdk, void, gdk_window_get_user_data, (void *, void **))(ev_window(last_move), &w);
+    void *top = w ? CALL(gtk, void *, gtk_widget_get_toplevel, (void *))(w) : NULL;
+    const char *title = top && is_a(top, "gtk_window_get_type") ? CALL(gtk, const char *, gtk_window_get_title, (void *))(top) : NULL;
+    if (title && strstr(title, "LibreOffice Calc")) step *= 1.9;
+    EvScroll *s = CALL(gdk, void *, gdk_event_new, (int))(SCROLL);
+    double x = 0, y = 0, rx = 0, ry = 0;
+    coords(last_move, &x, &y);
+    CALL(gdk, int, gdk_event_get_root_coords, (void *, double *, double *))(last_move, &rx, &ry);
+    s->window = CALL(gob, void *, g_object_ref, (void *))(ev_window(last_move));
+    s->send_event = 1;
+    s->time = ev_time(last_move);
+    s->x = x; s->y = y; s->x_root = rx; s->y_root = ry;
+    s->direction = SMOOTH;
+    s->delta_x = -dx / step; s->delta_y = -dy / step;
+    s->is_stop = stop ? 1 : 0;
+    CALL(gdk, void, gdk_event_set_device, (void *, void *))(s, CALL(gdk, void *, gdk_event_get_device, (void *))(last_move));
+    CALL(gdk, void, gdk_event_set_source_device, (void *, void *))(s, CALL(gdk, void *, gdk_event_get_source_device, (void *))(last_move));
+    TRACE("scroll %.2f %.2f%s", s->delta_x, s->delta_y, stop ? " stop" : "");
+    deliver(s);
+    CALL(gdk, void, gdk_event_free, (void *))(s);
+}
+static int glide(void *unused) {
+    (void)unused;
+    vx *= 0.94; vy *= 0.94;
+    if (fabs(vx) < 0.05 && fabs(vy) < 0.05) { glide_timer = 0; scroll_by(0, 0, 1); return 0; }
+    scroll_by(vx * 16, vy * 16, 0);
+    return 1;
+}
+static void release_held(void) { if (held) { deliver(held); forget(&held); } }
+static int on_hold(void *unused) {
+    (void)unused;
+    hold_timer = 0;
+    if (tstate == T_PENDING) { TRACE("touch: held, to LibreOffice"); release_held(); tstate = T_PASS; }
+    return 0;
+}
+
+static void shim_handler(void *e, void *data) {
+    (void)data;
+    int f = finger(e);
+    double x = 0, y = 0;
+    if (f) coords(e, &x, &y);
+    switch (tstate) {
+    case T_IDLE:
+        if (f == 1 || f == 4) stop_timer(&glide_timer);
+        if (f == 1 && lo_page(ev_window(e))) {
+            keep(&held, e); keep(&last_move, e);
+            sx = lx = x; sy = ly = y; vx = vy = 0;
+            last_ms = ev_time(e);
+            hold_timer = CALL(glib, unsigned, g_timeout_add, (unsigned, int (*)(void *), void *))(HOLD, on_hold, NULL);
+            tstate = T_PENDING;
+            TRACE("touch: down, held back");
+            return;
+        }
+        if (f == 1) {
+            void *w = NULL; char chain[256] = "";
+            if (ev_window(e)) CALL(gdk, void, gdk_window_get_user_data, (void *, void **))(ev_window(e), &w);
+            for (int i = 0; w && i < 4; i++) {
+                strncat(chain, CALL(gob, const char *, g_type_name_from_instance, (void *))(w), sizeof chain - strlen(chain) - 2);
+                strncat(chain, " ", sizeof chain - strlen(chain) - 1);
+                w = CALL(gtk, void *, gtk_widget_get_parent, (void *))(w);
+            }
+            TRACE("touch: not a page: %s", chain);
+            tstate = T_PASS;
+        }
+        break;
+    case T_PENDING:
+        if (f == 4) {
+            stop_timer(&hold_timer);
+            if (held && ev_type(held) == TOUCH_BEGIN) ((EvTouch *)held)->emulating_pointer = 0;
+            release_held();
+            TRACE("touch: pinch");
+            tstate = T_PINCH;
+            break;
+        }
+        if (f == 2) {
+            if (hypot(x - sx, y - sy) < SLOP) return;
+            stop_timer(&hold_timer); forget(&held);
+            tstate = T_SCROLL;
+            TRACE("touch: scrolling");
+            if (kbd_shown) keyboard_hide();
+            keep(&last_move, e);
+            scroll_by(x - sx, y - sy, 0);
+            lx = x; ly = y; last_ms = ev_time(e);
+            return;
+        }
+        if (f == 3) { TRACE("touch: tap"); stop_timer(&hold_timer); release_held(); tstate = T_IDLE; break; }
+        break;
+    case T_SCROLL:
+        if (f == 2) {
+            unsigned t = ev_time(e);
+            double dt = t > last_ms ? t - last_ms : 1;
+            vx = 0.6 * (x - lx) / dt + 0.4 * vx; vy = 0.6 * (y - ly) / dt + 0.4 * vy;
+            keep(&last_move, e);
+            scroll_by(x - lx, y - ly, 0);
+            lx = x; ly = y; last_ms = t;
+            return;
+        }
+        if (f == 3) {
+            tstate = T_IDLE;
+            if (ev_time(e) - last_ms > 80) vx = vy = 0; /* the finger stopped before lifting */
+            if (fabs(vx) > 0.3 || fabs(vy) > 0.3)
+                glide_timer = CALL(glib, unsigned, g_timeout_add, (unsigned, int (*)(void *), void *))(16, glide, NULL);
+            else scroll_by(0, 0, 1);
+            return;
+        }
+        if (f == 4) return; /* another finger while scrolling: ignored until all are up */
+        if (ev_type(e) == TOUCH_END || ev_type(e) == TOUCH_CANCEL) return;
+        break;
+    case T_PASS:
+        if (f == 3) tstate = T_IDLE;
+        break;
+    case T_PINCH:
+        if (f == 2 || f == 3) {
+            if (ev_type(e) >= TOUCH_BEGIN) ((EvTouch *)e)->emulating_pointer = 0;
+            if (f == 3) tstate = T_IDLE;
+        }
+        break;
+    }
+    deliver(e);
+}
+
+void gdk_event_handler_set(EventFunc func, void *data, void (*notify)(void *)) {
+    static void (*f)(EventFunc, void *, void (*)(void *));
+    if (!f) f = dlsym(RTLD_NEXT, "gdk_event_handler_set");
+    if (getenv("LO_SHIM_NO_SCROLL") || !func) { f(func, data, notify); return; }
+    real_handler = func; real_data = data;
+    TRACE("event handler wrapped");
+    f(shim_handler, data, notify);
 }

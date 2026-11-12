@@ -75,6 +75,34 @@ if [ -f "$xcu" ] && [ ! -e "$PROFILE/user/.lock" ]; then
     case "$seeded" in *'</oor:items>'*) printf '%s\n' "$seeded" > "$xcu";; esac
   fi
 fi
+# 0.4.8 phone defaults for profiles made before them, applied once (the marker file), so the user
+# can turn the sidebar back on (View > Sidebar) and keep it: the sidebar starts hidden in Writer,
+# Calc, Impress and Draw (its child window id is 10336; "V2,H,..." is hidden, "V2,V,..." shown), and
+# FitWidth also runs when a view is created, since OnLoad alone left some documents (Markdown) at
+# the zoom they were saved with.
+if [ -f "$xcu" ] && [ ! -e "$PROFILE/user/.lock" ] && [ ! -e "$PROFILE/user/.phone-0.4.8" ]; then
+  views="/org.openoffice.Office.Views/Windows/org.openoffice.Office.Views:WindowType"
+  fixed=$(seen=" "; has_view=""
+    while IFS= read -r line || [ -n "$line" ]; do
+      for m in swriter scalc simpress sdraw; do
+        case "$line" in *"WindowType['$m/10336']/UserData"*)
+          seen="$seen$m "
+          case "$line" in *"V2,V,"*) line="${line%%V2,V,*}V2,H,${line#*V2,V,}";; esac;;
+        esac
+      done
+      case "$line" in *'"OnViewCreated"'*) has_view=y;; esac
+      case "$line" in *'</oor:items>'*)
+        for m in swriter scalc simpress sdraw; do
+          case "$seen" in *" $m "*) ;; *)
+            printf '%s\n' "<item oor:path=\"$views['$m/10336']/UserData\"><prop oor:name=\"Data\" oor:op=\"fuse\" oor:type=\"xs:string\"><value>V2,H,0,AL:(5,16,0/0/48/450,48;450)</value></prop></item>";;
+          esac
+        done
+        [ -n "$has_view" ] || printf '%s\n' '<item oor:path="/org.openoffice.Office.Events/ApplicationEvents/Bindings"><node oor:name="OnViewCreated" oor:op="replace"><prop oor:name="BindingURL" oor:op="fuse"><value>vnd.sun.star.script:Standard.PhoneView.FitWidth?language=Basic&amp;location=application</value></prop></node></item>';;
+      esac
+      printf '%s\n' "$line"
+    done < "$xcu")
+  case "$fixed" in *'</oor:items>'*) printf '%s\n' "$fixed" > "$xcu"; : > "$PROFILE/user/.phone-0.4.8";; esac
+fi
 
 # Menu language picked on the start screen's Languages page (start/hub.py writes the pack's code).
 # Without it, LibreOffice follows the phone's language when that pack is installed, else English.

@@ -48,3 +48,18 @@ filechooser pathbar button, .path-bar button { min-height: 60px; padding: 4px 16
 filechooser entry { min-height: 60px; }
 headerbar { min-height: 76px; }
 headerbar button { min-height: 60px; padding: 4px 20px; }
+
+/* Title bars: GTK draws them itself on Lomiri, with Adwaita's desktop-sized close button (a tiny x
+   at the top right of every window and dialog). Finger-sized here, with a bigger icon. */
+headerbar.default-decoration, .titlebar.default-decoration { min-height: 72px; padding: 0 6px; }
+headerbar.default-decoration button.titlebutton, .titlebar button.titlebutton,
+headerbar button.titlebutton { min-width: 76px; min-height: 64px; padding: 0; margin: 4px 0; }
+button.titlebutton image { -gtk-icon-transform: scale(2); }
+
+/* Sidebar panels and their title rows (Properties, Styles, Navigator...): the panel's close
+   button and the other small toolbar buttons LibreOffice builds with GTK. */
+toolbar { padding: 2px; }
+toolbar toolbutton > button, toolbar button { min-width: 56px; min-height: 56px; padding: 4px; }
+toolbar toolbutton > button image { -gtk-icon-transform: scale(1.5); }
+expander title { min-height: 52px; }
+expander title > arrow { min-width: 28px; min-height: 28px; }
