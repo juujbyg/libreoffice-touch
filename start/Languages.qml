@@ -88,9 +88,21 @@ Page {
 
     Component.onCompleted: load()
 
+    // Outside the ListView on purpose: rebuilding the model makes the view give focus to its current
+    // item, which took it from a field in the list's header after every character (GitHub issue #2).
+    TextField {
+        id: search
+        objectName: 'search'
+        anchors { top: header.bottom; left: parent.left; right: parent.right
+                  topMargin: units.gu(1.5); leftMargin: units.gu(2); rightMargin: units.gu(2) }
+        placeholderText: 'Search languages'
+        inputMethodHints: Qt.ImhNoPredictiveText
+        onTextChanged: { page.filter = text; page.rebuild() }
+    }
+
     ListView {
         id: list
-        anchors { top: header.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+        anchors { top: search.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
         clip: true
         model: ListModel { id: languageModel }
         section.property: 'group'
@@ -155,13 +167,6 @@ Page {
                 maximumValue: 1
                 indeterminate: page.fraction <= 0
                 value: page.fraction
-            }
-            TextField {
-                x: units.gu(2)
-                width: parent.width - units.gu(4)
-                placeholderText: 'Search languages'
-                inputMethodHints: Qt.ImhNoPredictiveText
-                onTextChanged: { page.filter = text; page.rebuild() }
             }
         }
 

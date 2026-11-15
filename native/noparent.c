@@ -427,6 +427,7 @@ static void on_frame_realize(void *w, void *unused) {
 }
 
 static void trace_window(void *w);
+static void clip_watch(void *w);
 void *gtk_window_new(int type) {
     static void *(*f)(int);
     if (!f) f = dlsym(RTLD_NEXT, "gtk_window_new");
@@ -438,6 +439,7 @@ void *gtk_window_new(int type) {
     connect(w, "realize", (void *)on_frame_realize, NULL, NULL, 1);
     if (debug) connect(w, "map", (void *)on_map_log, NULL, NULL, 1);
     trace_window(w);
+    clip_watch(w);
     return w;
 }
 
@@ -1198,4 +1200,159 @@ void gdk_event_handler_set(EventFunc func, void *data, void (*notify)(void *)) {
     real_handler = func; real_data = data;
     TRACE("event handler wrapped");
     f(shim_handler, data, notify);
+}
+
+/* ---- Clipboard bridge ----------------------------------------------------------------------------
+ * Qt apps on Lomiri (Teleports, Morph, Notes...) share the clipboard through Content Hub
+ * (com.lomiri.content.dbus.Service: CreatePaste and GetLatestPasteData). LibreOffice is a GTK app on
+ * Wayland, whose clipboard Qt apps never see, so text copied elsewhere couldn't be pasted (GitHub
+ * issue #4) and text copied here stayed here. So:
+ *  - when a LibreOffice window gains focus, Content Hub's latest text goes onto GTK's clipboard;
+ *  - when LibreOffice's clipboard changes, its text goes to Content Hub.
+ * Content Hub takes an empty surface id from a Wayland client whose process has focus (lomiri-content-hub
+ * dc0ed40, 2026-09). Only plain text crosses; within LibreOffice, copies keep their formatting because
+ * text we sent ourselves is never imported back. LO_SHIM_NO_CLIPBOARD turns this off. */
+static void *clip_bus;
+static char *clip_last;       /* the last text that crossed, either way */
+static size_t clip_last_len;
+static void *clipboard(void) {
+    static void *cb;
+    if (!cb) cb = CALL(gtk, void *, gtk_clipboard_get, (void *))(
+        CALL(gdk, void *, gdk_atom_intern_static_string, (const char *))("CLIPBOARD"));
+    return cb;
+}
+static int clip_same(const char *t, size_t n) { return clip_last && n == clip_last_len && memcmp(t, clip_last, n) == 0; }
+static void clip_remember(const char *t, size_t n) {
+    free(clip_last);
+    clip_last = malloc(n + 1);
+    if (!clip_last) { clip_last_len = 0; return; }
+    memcpy(clip_last, t, n); clip_last[n] = 0; clip_last_len = n;
+}
+static void *bus(void) {
+    if (!clip_bus) clip_bus = CALL(gio, void *, g_bus_get_sync, (int, void *, void **))(2 /* SESSION */, NULL, NULL);
+    return clip_bus;
+}
+typedef void (*Ready)(void *source, void *result, void *data);
+static void hub_call(const char *method, void *params, Ready done) {
+    if (!bus()) return;
+    CALL(gio, void, g_dbus_connection_call, (void *, const char *, const char *, const char *, const char *, void *,
+                                             const void *, int, int, void *, Ready, void *))(
+        clip_bus, "com.lomiri.content.dbus.Service", "/", "com.lomiri.content.dbus.Service", method, params,
+        NULL, 0, 2000, NULL, done, NULL);
+}
+typedef struct { unsigned domain; int code; char *message; } GErr;
+static void *hub_finish(void *result) {
+    GErr *err = NULL;
+    void *v = CALL(gio, void *, g_dbus_connection_call_finish, (void *, void *, GErr **))(clip_bus, result, &err);
+    if (err) { TRACE("clipboard: %s", err->message); CALL(glib, void, g_error_free, (GErr *))(err); }
+    return v;
+}
+
+/* Content Hub's format: int count, then per format four ints (name offset, name size, data offset,
+ * data size), then the bytes. The data comes from another app, so every offset is checked. */
+static const char *pick_text(const unsigned char *buf, size_t size, size_t *len) {
+    static const char *wanted[] = { "text/plain;charset=utf-8", "text/plain", "UTF8_STRING" };
+    int count;
+    if (size < sizeof count) return NULL;
+    memcpy(&count, buf, sizeof count);
+    if (count < 0 || count > 16 || size < sizeof(int) * (1 + 4 * (size_t)count)) return NULL;
+    for (size_t w = 0; w < sizeof wanted / sizeof *wanted; w++)
+        for (int i = 0; i < count; i++) {
+            int h[4];
+            memcpy(h, buf + sizeof(int) * (1 + 4 * (size_t)i), sizeof h);
+            if (h[0] < 0 || h[1] < 0 || h[2] < 0 || h[3] < 0) continue;
+            if ((size_t)h[0] + h[1] > size || (size_t)h[2] + h[3] > size) continue;
+            if ((size_t)h[1] == strlen(wanted[w]) && memcmp(buf + h[0], wanted[w], h[1]) == 0) {
+                *len = h[3];
+                return (const char *)buf + h[2];
+            }
+        }
+    return NULL;
+}
+
+/* Content Hub answers with nothing both when its clipboard is empty and when it doesn't yet count the
+ * window as focused (seen on 2026-11-15: right after Writer started, "Surface isn't focused. Denying
+ * paste."), so an empty answer is retried a few times after each focus. */
+static const unsigned clip_delays[] = { 150, 450, 900, 1500 };
+static unsigned clip_try, clip_round;
+static int ask_latest(void *round);
+static void retry_latest(void) {
+    if (++clip_try < sizeof clip_delays / sizeof *clip_delays)
+        CALL(glib, unsigned, g_timeout_add, (unsigned, int (*)(void *), void *))(
+            clip_delays[clip_try], ask_latest, (void *)(size_t)clip_round);
+}
+static void on_latest(void *source, void *result, void *data) {
+    (void)source;
+    if ((size_t)data != clip_round) return; /* a newer focus started its own tries */
+    void *v = hub_finish(result);
+    if (!v) { retry_latest(); return; }
+    void *ay = CALL(glib, void *, g_variant_get_child_value, (void *, size_t))(v, 0);
+    size_t size = 0, len = 0;
+    const unsigned char *buf = CALL(glib, const void *, g_variant_get_fixed_array, (void *, size_t *, size_t))(ay, &size, 1);
+    const char *text = buf ? pick_text(buf, size, &len) : NULL;
+    if (!text || !len) { TRACE("clipboard: nothing to import (%zu bytes, try %u)", size, clip_try + 1); retry_latest(); }
+    else if (clip_same(text, len)) TRACE("clipboard: unchanged");
+    else if (!CALL(glib, int, g_utf8_validate, (const char *, long, const char **))(text, (long)len, NULL)) TRACE("clipboard: not UTF-8");
+    else {
+        clip_remember(text, len);
+        CALL(gtk, void, gtk_clipboard_set_text, (void *, const char *, int))(clipboard(), text, (int)len);
+        TRACE("clipboard: imported %zu bytes", len);
+    }
+    CALL(glib, void, g_variant_unref, (void *))(ay);
+    CALL(glib, void, g_variant_unref, (void *))(v);
+}
+static int ask_latest(void *round) {
+    if ((size_t)round != clip_round) return 0;
+    if (!bus()) return 0;
+    CALL(gio, void, g_dbus_connection_call, (void *, const char *, const char *, const char *, const char *, void *,
+                                             const void *, int, int, void *, Ready, void *))(
+        clip_bus, "com.lomiri.content.dbus.Service", "/", "com.lomiri.content.dbus.Service", "GetLatestPasteData",
+        CALL(glib, void *, g_variant_new, (const char *, ...))("(s)", ""), NULL, 0, 2000, NULL, on_latest, round);
+    return 0;
+}
+static int on_clip_focus(void *w, EvFocus *e, void *u) {
+    (void)w; (void)u;
+    if (!e->in) return 0;
+    clip_try = 0; clip_round++;
+    CALL(glib, unsigned, g_timeout_add, (unsigned, int (*)(void *), void *))(clip_delays[0], ask_latest, (void *)(size_t)clip_round);
+    return 0;
+}
+
+static void on_sent(void *source, void *result, void *data) {
+    (void)source; (void)data;
+    void *v = hub_finish(result);
+    if (v) { TRACE("clipboard: exported"); CALL(glib, void, g_variant_unref, (void *))(v); }
+}
+static void on_own_text(void *cb, const char *text, void *data) {
+    (void)cb; (void)data;
+    if (!text) return;
+    size_t n = strlen(text);
+    if (!n || clip_same(text, n)) return; /* nothing, or what we just imported */
+    static const char format[] = "text/plain";
+    size_t f = sizeof format - 1, size = sizeof(int) * 5 + f + n;
+    if (size > 4 * 1024 * 1024) { TRACE("clipboard: %zu bytes is over Content Hub's limit", n); return; }
+    unsigned char *buf = malloc(size);
+    if (!buf) return;
+    int h[5] = { 1, (int)sizeof h, (int)f, (int)(sizeof h + f), (int)n };
+    memcpy(buf, h, sizeof h); memcpy(buf + sizeof h, format, f); memcpy(buf + sizeof h + f, text, n);
+    clip_remember(text, n);
+    void *ay = CALL(glib, void *, g_variant_new_fixed_array, (const void *, const void *, size_t, size_t))("y", buf, size, 1);
+    const char *types[] = { format, NULL };
+    void *as = CALL(glib, void *, g_variant_new_strv, (const char *const *, long))(types, -1);
+    const char *app = getenv("APP_ID");
+    hub_call("CreatePaste", CALL(glib, void *, g_variant_new, (const char *, ...))("(ss@ay@as)", app ? app : "", "", ay, as), on_sent);
+    free(buf);
+}
+static void on_owner_change(void *cb, void *event, void *data) {
+    (void)event; (void)data;
+    CALL(gtk, void, gtk_clipboard_request_text, (void *, void (*)(void *, const char *, void *), void *))(cb, on_own_text, NULL);
+}
+
+static void clip_watch(void *w) {
+    static int off = -1, watching;
+    if (off < 0) off = getenv("LO_SHIM_NO_CLIPBOARD") != NULL;
+    if (off) return;
+    unsigned long (*connect)(void *, const char *, void *, void *, void *, int) = gob("g_signal_connect_data");
+    connect(w, "focus-in-event", (void *)on_clip_focus, NULL, NULL, 0);
+    if (!watching++) connect(clipboard(), "owner-change", (void *)on_owner_change, NULL, NULL, 0);
 }
