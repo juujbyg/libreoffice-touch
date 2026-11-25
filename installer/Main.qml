@@ -93,7 +93,7 @@ MainView {
                 text: 'Writer, Calc, Impress, Draw, Math and Base, as an unofficial '
                       + 'port for Ubuntu Touch.\n\n'
                       + 'LibreOffice itself isn\'t part of this download. On first use the app fetches '
-                      + 'the official LibreOffice 26.8.2 for arm64 from The Document Foundation '
+                      + 'the official LibreOffice 26.8.3 for arm64 from The Document Foundation '
                       + '(downloadarchive.documentfoundation.org), checks it against a fixed '
                       + 'SHA-256 and unpacks it into the app\'s own folder.\n\n'
                       + 'Download: about 200 MB. Space used: about 730 MB. '

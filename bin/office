@@ -104,6 +104,25 @@ if [ -f "$xcu" ] && [ ! -e "$PROFILE/user/.lock" ] && [ ! -e "$PROFILE/user/.pho
   case "$fixed" in *'</oor:items>'*) printf '%s\n' "$fixed" > "$xcu"; : > "$PROFILE/user/.phone-0.4.8";; esac
 fi
 
+# 0.5.0 safety settings for profiles made before them, applied once (the marker file), so a user
+# who knowingly changes them in Tools > Options > Security keeps the change. Document macros run
+# only from trusted locations, and there are none (Very High; the app's own PhoneView macro is in the
+# profile, not in a document, and still runs), and documents from untrusted places can't load linked
+# images and the like. New profiles get the same from profile/registrymodifications.xcu.
+if [ -f "$xcu" ] && [ ! -e "$PROFILE/user/.lock" ] && [ ! -e "$PROFILE/user/.phone-0.5.0" ]; then
+  scripting="/org.openoffice.Office.Common/Security/Scripting"
+  safe=$(while IFS= read -r line || [ -n "$line" ]; do
+      case "$line" in
+        *"\"$scripting\""*'"MacroSecurityLevel"'*|*"\"$scripting\""*'"BlockUntrustedRefererLinks"'*) continue;;
+        *'</oor:items>'*)
+          printf '%s\n' "<item oor:path=\"$scripting\"><prop oor:name=\"MacroSecurityLevel\" oor:op=\"fuse\"><value>3</value></prop></item>" \
+            "<item oor:path=\"$scripting\"><prop oor:name=\"BlockUntrustedRefererLinks\" oor:op=\"fuse\"><value>true</value></prop></item>";;
+      esac
+      printf '%s\n' "$line"
+    done < "$xcu")
+  case "$safe" in *'</oor:items>'*) printf '%s\n' "$safe" > "$xcu"; : > "$PROFILE/user/.phone-0.5.0";; esac
+fi
+
 # Menu language picked on the start screen's Languages page (start/hub.py writes the pack's code).
 # Without it, LibreOffice follows the phone's language when that pack is installed, else English.
 lang=""

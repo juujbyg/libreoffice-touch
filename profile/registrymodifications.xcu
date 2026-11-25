@@ -12,4 +12,6 @@
 <item oor:path="/org.openoffice.Office.Views/Windows/org.openoffice.Office.Views:WindowType['scalc/10336']/UserData"><prop oor:name="Data" oor:op="fuse" oor:type="xs:string"><value>V2,H,0,AL:(5,16,0/0/48/450,48;450)</value></prop></item>
 <item oor:path="/org.openoffice.Office.Events/ApplicationEvents/Bindings"><node oor:name="OnLoad" oor:op="replace"><prop oor:name="BindingURL" oor:op="fuse"><value>vnd.sun.star.script:Standard.PhoneView.FitWidth?language=Basic&amp;location=application</value></prop></node></item>
 <item oor:path="/org.openoffice.Office.Events/ApplicationEvents/Bindings"><node oor:name="OnViewCreated" oor:op="replace"><prop oor:name="BindingURL" oor:op="fuse"><value>vnd.sun.star.script:Standard.PhoneView.FitWidth?language=Basic&amp;location=application</value></prop></node></item>
+<item oor:path="/org.openoffice.Office.Common/Security/Scripting"><prop oor:name="MacroSecurityLevel" oor:op="fuse"><value>3</value></prop></item>
+<item oor:path="/org.openoffice.Office.Common/Security/Scripting"><prop oor:name="BlockUntrustedRefererLinks" oor:op="fuse"><value>true</value></prop></item>
 </oor:items>

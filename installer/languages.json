@@ -1,981 +1,981 @@
 {
- "build": "26.8.2.2",
+ "build": "26.8.3.1",
  "signed_by": "C2839ECAD9408FBE9531C3E9F434A1EFAFEEAEA3",
  "languages": [
   {
    "code": "ab",
    "name": "Аԥсшәа",
    "english": "Abkhazian",
-   "size": 614026,
-   "sha256": "38f0dff481670570aa13ff24dfc21a3a389c315269a852b999ca2baf23917e71",
+   "size": 614405,
+   "sha256": "d4a88d075adebe89686193d6aa8d1b4e9228738fa7f8408c15c84db4cd7e7a23",
    "dictionary": false
   },
   {
    "code": "af",
    "name": "Afrikaans",
    "english": "Afrikaans",
-   "size": 1193532,
-   "sha256": "42e2174691413105c3e01922216b7efb45a1fb82d19404241f5eff6ff03ac867",
+   "size": 1193116,
+   "sha256": "4063ae306a49b9a67c9328bd16b7779c093ab0f40389f2a7882dc76e803aa11b",
    "dictionary": true
   },
   {
    "code": "sq",
    "name": "Shqip",
    "english": "Albanian",
-   "size": 893358,
-   "sha256": "dec05edf98839dab15faf0d383054864ac9b4beb73c0b0ff5cfd436c97b456a0",
+   "size": 892870,
+   "sha256": "41e8d20b7a73ab60fd70848d108f9f2bb0261e44531fe9174cdcc9ead7626f22",
    "dictionary": true
   },
   {
    "code": "am",
    "name": "አማርኛ",
    "english": "Amharic",
-   "size": 630167,
-   "sha256": "64a816170d3bb2cf62207e60159142f8bc9fbf1c08c2c649c9ca7eb247debfd0",
+   "size": 630108,
+   "sha256": "f7eb0d89c5a50edda9be102ac1990d7e183fc61864f646462aee16be9805f2ae",
    "dictionary": false
   },
   {
    "code": "ar",
    "name": "العربية",
    "english": "Arabic",
-   "size": 1742872,
-   "sha256": "de7eeeff1f423d6b2214b51a9bf5e175f28bfebcad8088b6ac6d79f980647ab7",
+   "size": 1744217,
+   "sha256": "5e2d962a81db0a2bc54451367772f356baeb2ac1d7f5c44eb2061a143567c7e4",
    "dictionary": true
   },
   {
    "code": "hy",
    "name": "Հայերեն",
    "english": "Armenian",
-   "size": 837300,
-   "sha256": "135deeeb51d073a4ef12adacdeda715903dc687785105fa1b600a3f204c323a4",
+   "size": 837151,
+   "sha256": "e69e7b797daa59f8efbe6d95337116f2e7ed9096725231f9295a66d932992555",
    "dictionary": false
   },
   {
    "code": "as",
    "name": "অসমীয়া",
    "english": "Assamese",
-   "size": 344157,
-   "sha256": "e72f392b989a0c0c95b7e5295a17dcfa63f816726d2cf1b64fc7eabaa1d3d12a",
+   "size": 344362,
+   "sha256": "2fa67d2aab28afc50d704d059773ba1c15b7918e91eccd9fb328344deebe355b",
    "dictionary": false
   },
   {
    "code": "ast",
    "name": "Asturianu",
    "english": "Asturian",
-   "size": 479527,
-   "sha256": "f3399c3423c1325af3928d6850b316e583333cfed1285c7e7809663cab759b41",
+   "size": 479577,
+   "sha256": "b5b3e0c91051670c7a6df7f6af0c7cba43235ea91a6da4a8d118a4a4d5068096",
    "dictionary": false
   },
   {
    "code": "bn",
    "name": "বাংলা",
    "english": "Bangla",
-   "size": 678259,
-   "sha256": "a67fed47d76ef6a48413b487713b2feeebe1036b0535ff699acf74e938f09744",
+   "size": 678622,
+   "sha256": "935afed5b9ed2c4d8e408e2c687b2e65a55ebe5a323a64c1547c7a012c29e63f",
    "dictionary": true
   },
   {
    "code": "bn-IN",
    "name": "বাংলা (ভারত)",
    "english": "Bangla (India)",
-   "size": 466062,
-   "sha256": "8ad24db604d8f289d3b1db5cba6a67c2602a6c4ae764fc64e53b6da2788e2e37",
+   "size": 465662,
+   "sha256": "333557050f0e78193a5d19ee76285bc8b211dc820491d53755cb0b7ec490c353",
    "dictionary": false
   },
   {
    "code": "eu",
    "name": "Euskara",
    "english": "Basque",
-   "size": 710837,
-   "sha256": "221d9f8d3a8369eb867f57414d2de776f7ee59553a1def88b4d1220a96d45169",
+   "size": 710756,
+   "sha256": "9bb0466eafcc476cd26aca7e1a9d7c92db89c31d2018e994480779f7efeef25e",
    "dictionary": false
   },
   {
    "code": "be",
    "name": "Беларуская",
    "english": "Belarusian",
-   "size": 2091672,
-   "sha256": "ff1d0c823cdd0df9be3e349495ccffc31dcb203df958d05d62cad49540f84778",
+   "size": 2091202,
+   "sha256": "ed5e21cf5a08c86179df5b1b461efc639aacded008f267af125c0a4433994823",
    "dictionary": true
   },
   {
    "code": "brx",
    "name": "बर’",
    "english": "Bodo",
-   "size": 227320,
-   "sha256": "4ebf70c641465e0894305b1076bfd124f6c21b8c9702705af764d9044ab11f89",
+   "size": 227605,
+   "sha256": "873ae557e68501aca5592e4964c592555e5dd9b6a5f85bf53ff47e7909436017",
    "dictionary": false
   },
   {
    "code": "bs",
    "name": "Bosanski",
    "english": "Bosnian",
-   "size": 473569,
-   "sha256": "455ee96a18f31386457ba40af3bbcedbc4e7b0d489e5080c0e849f853c811de5",
+   "size": 473638,
+   "sha256": "118d0f6b3c37e137d271f69e83a138d6dde5d7805e499052a8eaf9cccd8b4744",
    "dictionary": true
   },
   {
    "code": "br",
    "name": "Brezhoneg",
    "english": "Breton",
-   "size": 982541,
-   "sha256": "ab2593906cb7cd2c1312b100ad8a14d002448f117afd82af5b2825194acca37c",
+   "size": 981937,
+   "sha256": "58d284d2540b8d24dabccbffc7f4d9ccd17cb028186ae90b6ce6b20ee288f12f",
    "dictionary": true
   },
   {
    "code": "bg",
    "name": "Български",
    "english": "Bulgarian",
-   "size": 1917846,
-   "sha256": "595723fd5c376f7eadf3fb7d053b6974ab1bd16bb90fe1f7b0d107657127eb83",
+   "size": 1918661,
+   "sha256": "4fb8d1849430629d9a5eccca2f42edc303766baaf3ecde3e32ec89ad6ff908cf",
    "dictionary": true
   },
   {
    "code": "my",
    "name": "မြန်မာ",
    "english": "Burmese",
-   "size": 298726,
-   "sha256": "c5d69407d0267bf0010c10680935a882a020ee9dc153ec3d6814734b7f06189b",
+   "size": 299164,
+   "sha256": "b1be4c9751cc6d69b544a3ea3d5a471cdab49724953c200f56b10c1e7beb6894",
    "dictionary": false
   },
   {
    "code": "ca",
    "name": "Català",
    "english": "Catalan",
-   "size": 2551651,
-   "sha256": "603a0483899a88696e862e018b4bd4cef15043bc2adec0a235da68287df1a7d2",
+   "size": 2551983,
+   "sha256": "7f9031d6232c66e6a24fe5b72854e8c3914537dde140947c66db0b9414a1eaa4",
    "dictionary": true
   },
   {
    "code": "ca-valencia",
    "name": "Català (valencià)",
    "english": "Catalan (Valencian)",
-   "size": 2541717,
-   "sha256": "9920904f67c0bc7cae6e632ecadaa297345a6d1c294c090357cba6e538b0f21d",
+   "size": 2541912,
+   "sha256": "32e6aceedeeff8ddaeb81250f7846ee0e896c8f249b00f9d49d6296fc757b4d9",
    "dictionary": true
   },
   {
    "code": "ckb",
    "name": "کوردیی ناوەندی",
    "english": "Central Kurdish",
-   "size": 340374,
-   "sha256": "c79462f2ae821f6d7538403d5222fe2223775409215b54569e9ab6ed9b058961",
+   "size": 339920,
+   "sha256": "43426dad352e8fe684d4f28eda675db1409a77d5f41495a737c4b96f6848d4c0",
    "dictionary": true
   },
   {
    "code": "zh-CN",
    "name": "中文 (简体, 中国)",
    "english": "Chinese (Simplified, China)",
-   "size": 861444,
-   "sha256": "09e4ec889c1e16308d042d8942d278bbf5e87d678dd320eef27c0a9663c5c640",
+   "size": 861652,
+   "sha256": "ba6c7ebcbdfa712c3dafd903082e9dd3fc613bb622a7c72f75d779cabfe1ef54",
    "dictionary": false
   },
   {
    "code": "zh-TW",
    "name": "中文 (繁體, 台灣)",
    "english": "Chinese (Traditional, Taiwan)",
-   "size": 860921,
-   "sha256": "a6ae1162f055628bfe1ea8824a7f40edac3006a1a64d43d3aaae9975fdc91b77",
+   "size": 861239,
+   "sha256": "0f9e4f565b5ab5c3e2d77a4ca208e5640084fb1d5910d1571c067bb543bbd12e",
    "dictionary": false
   },
   {
    "code": "hr",
    "name": "Hrvatski",
    "english": "Croatian",
-   "size": 705680,
-   "sha256": "e5006731429cd480418187d6b854d958b44b35722112defc257469f15d340a22",
+   "size": 705579,
+   "sha256": "ec6935f775f1aee614a8ad84c809494e5ff780dc03108d67fe153cbf1135be05",
    "dictionary": true
   },
   {
    "code": "cs",
    "name": "Čeština",
    "english": "Czech",
-   "size": 2731327,
-   "sha256": "910ecb4041b26845d7f6c2b8f18483d25b84ff8df5dedf5b203240d2c5cdbd71",
+   "size": 2731213,
+   "sha256": "1d9be9b51fe02a7798ab6e8239b603aaa5e32b8b7e5cb448393d9295a3da8155",
    "dictionary": true
   },
   {
    "code": "da",
    "name": "Dansk",
    "english": "Danish",
-   "size": 2430377,
-   "sha256": "acdd0bed1310587331a825c5f054c3e5319313452831a1a76b803ba77603ee1f",
+   "size": 2429331,
+   "sha256": "cac86ce6607c0511e8e843e9ab1fed998f2b9af28eddf1c4e05d2095815bca2c",
    "dictionary": true
   },
   {
    "code": "dgo",
    "name": "डोगरी (भारत)",
    "english": "Dogri (India)",
-   "size": 286489,
-   "sha256": "8daa48b19f3955660ab04fd8bc246a7fb9d4b2f047a5d34c7366c8fe65121747",
+   "size": 286695,
+   "sha256": "ad28a3e78487d02facd84b970b32bd49b75ba77e945c395ba3716a7c78ed765a",
    "dictionary": false
   },
   {
    "code": "nl",
    "name": "Nederlands",
    "english": "Dutch",
-   "size": 1644099,
-   "sha256": "63966711e939bec3c97fb7707a6f4f94b68c0a4a685c1a1c271cf7b269080892",
+   "size": 1644939,
+   "sha256": "96849e0fbb92617347d861a1d167910ec4e47c184c61b85d18fb21cbe34227a9",
    "dictionary": true
   },
   {
    "code": "dz",
    "name": "རྫོང་ཁ",
    "english": "Dzongkha",
-   "size": 317046,
-   "sha256": "95bcfba4bc2b95eda3a07c064e55d1603fd3e121c7fa24d1c793b92c9a5bebc8",
+   "size": 317189,
+   "sha256": "d98add786f340cd675dd549b7d984c4ed187166a9591ff1837c8b8f4b537c017",
    "dictionary": false
   },
   {
    "code": "en-ZA",
    "name": "English (South Africa)",
    "english": "English (South Africa)",
-   "size": 4257048,
-   "sha256": "546b0f76d64798558792c11b23daece5d4b8a5772f6466de45900c75cfe207cd",
+   "size": 4257522,
+   "sha256": "822bc57c707f8817197a5dbfdcfe90323c95616d5137e15731f6a32e8b59679c",
    "dictionary": true
   },
   {
    "code": "en-GB",
    "name": "English (United Kingdom)",
    "english": "English (United Kingdom)",
-   "size": 4714569,
-   "sha256": "9eddea33797cf9eaabf9b604dc52ce991cd7c14fdb680d0d500c4a8510e13296",
+   "size": 4715577,
+   "sha256": "e521a59be05dba473a6cc862866c89a7dd997adca1d0899ef7e980035bcaaac5",
    "dictionary": true
   },
   {
    "code": "eo",
    "name": "Esperanto",
    "english": "Esperanto",
-   "size": 1029652,
-   "sha256": "f4ed5887ba209cd7d0d8bbfa281901b78731c59ef69a8348f309497c76c34164",
+   "size": 1030647,
+   "sha256": "bae4d2d2f55769ba1e153971890e4708bcd96aef8c4ae3cc9ae6d38cf17f8511",
    "dictionary": true
   },
   {
    "code": "et",
    "name": "Eesti",
    "english": "Estonian",
-   "size": 1297986,
-   "sha256": "6c07f0fee8430d04723bda208b618396596199ace575f335e0e2fb9a57c68151",
+   "size": 1298023,
+   "sha256": "87af818fa34fbe5a630c8586358882350ec1678dea7a8430b9805c400167e73e",
    "dictionary": true
   },
   {
    "code": "tl",
    "name": "Filipino (Pilipinas)",
    "english": "Filipino (Philippines)",
-   "size": 761437,
-   "sha256": "af4e361915c44c350df4f0b2c182a90994bc0c2b590119fa67890d62933fb79a",
+   "size": 761439,
+   "sha256": "952f214e89defbfabc3c09755167f8036b4a5bee6fc107f97aba361a4119c6a4",
    "dictionary": false
   },
   {
    "code": "fi",
    "name": "Suomi",
    "english": "Finnish",
-   "size": 688802,
-   "sha256": "955885f8beebaf7810067edf5ba8f876c52850de6729ca529e8b264add00b4e5",
+   "size": 690284,
+   "sha256": "6f19b783d5a220f1304edfdf67be8c586463056efceb33a1c8092500ee9f0680",
    "dictionary": false
   },
   {
    "code": "fr",
    "name": "Français",
    "english": "French",
-   "size": 2152915,
-   "sha256": "c5b84a6c318c3d195d85a97790a605c1c248838d6420b3d61b605f9cac39c600",
+   "size": 2151739,
+   "sha256": "126c931e8f10a153ddca9940c70ac7f7b8d0e13e579aa41263ac599ea92c8039",
    "dictionary": true
   },
   {
    "code": "fur",
    "name": "Furlan",
    "english": "Friulian",
-   "size": 144555,
-   "sha256": "7dac37ba81d1201b91086ae8fad5d73fcd0596f198585b020268f0da0dc5ccb1",
+   "size": 144528,
+   "sha256": "4c990a584d7c3c1b99b6f291ff59c6ff4600464faa0a8cef8f5744a5b6a8fecc",
    "dictionary": false
   },
   {
    "code": "gl",
    "name": "Galego",
    "english": "Galician",
-   "size": 2138615,
-   "sha256": "ff2d050f885ffdb85f60a2db1e23ac780c9b8eee51cd951f2c3c08285edd678a",
+   "size": 2138682,
+   "sha256": "3849944c219902e62e1fe9287557540477c7eb40e35923bedac6ec9b4cb4d2be",
    "dictionary": true
   },
   {
    "code": "ka",
    "name": "Ქართული",
    "english": "Georgian",
-   "size": 844229,
-   "sha256": "f437c982cf137897d07ed4ba86f13fb261c838a759832dc809a8f7c8f1ea70d2",
+   "size": 844649,
+   "sha256": "20f5e32e03c6c93d64b040f303f958ec287e044426002b7eb6d56352eb08670a",
    "dictionary": false
   },
   {
    "code": "de",
    "name": "Deutsch",
    "english": "German",
-   "size": 8594984,
-   "sha256": "1d4903d5f886850126a1a176faff50f40f0ca3d2bf28f9c0cd396274204f6fb0",
+   "size": 8594953,
+   "sha256": "93fb16122b10da35cd78ef520a7d9c4cdb3de2eb0e9bf6244d78327c2753bad3",
    "dictionary": true
   },
   {
    "code": "el",
    "name": "Ελληνικά",
    "english": "Greek",
-   "size": 2425364,
-   "sha256": "626300429eea088109f1d306761b858f7712fea0795819b48d2de11d4ce77e41",
+   "size": 2427237,
+   "sha256": "a0c2a5e410a7be9b12e69806c55ce2988c792f2d720db68dd8a00f216af21d08",
    "dictionary": true
   },
   {
    "code": "gug",
    "name": "Avañe’ẽ (Paraguai)",
    "english": "Guarani (Paraguay)",
-   "size": 343158,
-   "sha256": "d559b3319045d1d31f8ac2075c1e1491ac10a378cfd85109fc1f83fb0dfa0933",
+   "size": 343015,
+   "sha256": "a652212d9bd9261fa2bb8d39b3eb02fc831098dfc7d37316700da95780dc2477",
    "dictionary": false
   },
   {
    "code": "gu",
    "name": "ગુજરાતી",
    "english": "Gujarati",
-   "size": 918148,
-   "sha256": "637c3f3a8b934a0c3abdceb2d87c7cc8d46a8783bd3c51249902342cf30a64b7",
+   "size": 918584,
+   "sha256": "fc3b5ad298e670510e02431935df7939b2b4dd572eb867a5d7d4a352ea82118b",
    "dictionary": true
   },
   {
    "code": "he",
    "name": "עברית",
    "english": "Hebrew",
-   "size": 1195133,
-   "sha256": "fe70d023b3ec09cf3ab912c75285cf86aadb7ad0bb031c139b3a23595510d9e6",
+   "size": 1194045,
+   "sha256": "ae37bd2ba18fb2d2cad24f3d92b64cac3b3ffa51e0739f6a6b0f2f7bac02636a",
    "dictionary": true
   },
   {
    "code": "hi",
    "name": "हिन्दी",
    "english": "Hindi",
-   "size": 1337071,
-   "sha256": "7d305048375db2fad60cd40e054a9c9757935190850acec5284d67b70d09f34f",
+   "size": 1336769,
+   "sha256": "e229ad1d587efa67cfbc12050c18c1d293d66f46aae266a3bbd741a1d70e76ab",
    "dictionary": true
   },
   {
    "code": "hu",
    "name": "Magyar",
    "english": "Hungarian",
-   "size": 2328480,
-   "sha256": "b13814960da4457fff35cc5ea5f317f47d9f24b41b1a3a2b6ab7c6fb83fd6b79",
+   "size": 2328231,
+   "sha256": "1acf40d546d902215d6b4174d1213fd43da2c17d7885c80bfe1fe308feda072c",
    "dictionary": true
   },
   {
    "code": "is",
    "name": "Íslenska",
    "english": "Icelandic",
-   "size": 1208682,
-   "sha256": "13ff976386c30161608b54d1abe840c833ac69b6a2a2e9d794495ba44ec50a17",
+   "size": 1209334,
+   "sha256": "b781be78f2051302e48273c2ada4b65efefa160b0d8cd0be72fcd00ab2cfdecd",
    "dictionary": true
   },
   {
    "code": "id",
    "name": "Indonesia",
    "english": "Indonesian",
-   "size": 1491653,
-   "sha256": "2c8dfbd4ccdc4c817844bffb341294c0898ebff08dfde6f4277052e13807c953",
+   "size": 1491941,
+   "sha256": "4124b552fef3d6803be6c4fbfba5e6be8fa48bd3f36c986893ec63d19e3a6ede",
    "dictionary": true
   },
   {
    "code": "ga",
    "name": "Gaeilge",
    "english": "Irish",
-   "size": 809080,
-   "sha256": "036dc1cc2970c25d42f82fe8be87b6c0d3f0da1d5e239aeeebec21440da612ec",
+   "size": 808425,
+   "sha256": "bf43d7856ff0af446eba372a4c6d779ed523f1ce44e4054dcbb23c8608d6e36b",
    "dictionary": false
   },
   {
    "code": "it",
    "name": "Italiano",
    "english": "Italian",
-   "size": 1817894,
-   "sha256": "3cf755884b22803a764f0d44260d7867c8b8d2e38f0822e8feef79cc3f4a9385",
+   "size": 1817637,
+   "sha256": "0593a6be793ff40b825a37b904f14f1ce5e887fe09f1b20186ba0bef16ff59b3",
    "dictionary": true
   },
   {
    "code": "ja",
    "name": "日本語",
    "english": "Japanese",
-   "size": 772841,
-   "sha256": "3aa7b1053fdf7b62f502e515eed7de13675671528380eed0bce35175044161be",
+   "size": 773107,
+   "sha256": "fe38fe33839ea113a6b0e855bdf1fddbe0564e6c57862f0649ce1dc78f43185f",
    "dictionary": false
   },
   {
    "code": "kab",
    "name": "Taqbaylit",
    "english": "Kabyle",
-   "size": 431524,
-   "sha256": "cedda06c918741d038006cb3be9eac942867ce1952dab2c010bdd5f074cde7d6",
+   "size": 431448,
+   "sha256": "83de7e8d8273f6ca3f25d678dd1a809c33535c7d24a352e83c2cdd8015c4f273",
    "dictionary": false
   },
   {
    "code": "kn",
    "name": "ಕನ್ನಡ",
    "english": "Kannada",
-   "size": 371623,
-   "sha256": "f721b0c5603fa325428da99c13c004b40280cedcefcd87053ed4bfd4ef3ffea4",
+   "size": 371069,
+   "sha256": "c0abec5eaa1d9ea70b726c0913be5e304780f646b5893024407cc719fccb8781",
    "dictionary": false
   },
   {
    "code": "ks",
    "name": "کٲشُر",
    "english": "Kashmiri",
-   "size": 227863,
-   "sha256": "410d1eb6f663043fd0c71423cc7e6d55f4a754b68b57994ba9cdc0b13e05d263",
+   "size": 228198,
+   "sha256": "daaa46c73301987af71800c799ba5ea2df354cad0b248bcc72c460e5e5d86e4f",
    "dictionary": false
   },
   {
    "code": "kk",
    "name": "Қазақ тілі",
    "english": "Kazakh",
-   "size": 831079,
-   "sha256": "6be3cecb323f9845bbe995b026d09869741836e23f952341c63ab771901b97b1",
+   "size": 831325,
+   "sha256": "d19c2c6a1088096337fe6343623555ac05b63966ec5f17ba55605ffc9e4374b7",
    "dictionary": false
   },
   {
    "code": "km",
    "name": "ខ្មែរ",
    "english": "Khmer",
-   "size": 544062,
-   "sha256": "48aca5a9b46f21edb3365eefc71d5edb8e0504475c9c1bad58d44fe44b1f10fb",
+   "size": 544692,
+   "sha256": "c55965c0b79635a7da94da112fd04291505523ba5003550555f5e3d27f80e594",
    "dictionary": false
   },
   {
    "code": "rw",
    "name": "Ikinyarwanda",
    "english": "Kinyarwanda",
-   "size": 240511,
-   "sha256": "f92cbbdb36993aa92dc370d20101c2e43833d69834cfc9cb6ec2274761578c00",
+   "size": 240073,
+   "sha256": "c942fd8fb0e0654d8f45d0d77fbbebe1c98674b4ad4d46e7e62c9437f76096ac",
    "dictionary": false
   },
   {
    "code": "kok",
    "name": "कोंकणी",
    "english": "Konkani",
-   "size": 274434,
-   "sha256": "75dad2f6c834ba6e2da60e5042387a25e3eb14eb6089ef17f760ecc860ed8b6f",
+   "size": 274695,
+   "sha256": "9890f5e398a3d64530183023c68402a8a85abb3b0b48598b609aa99d15a4aac3",
    "dictionary": false
   },
   {
    "code": "ko",
    "name": "한국어",
    "english": "Korean",
-   "size": 1243587,
-   "sha256": "60c422f3c71bdbb67a4f2873b304af22ed35fc7dc9c861260de89954fb4459da",
+   "size": 1243171,
+   "sha256": "d4fc9a55d95dab075571c6498903235c18f8cb859a1bf13a8df428664c4541f5",
    "dictionary": true
   },
   {
    "code": "kmr-Latn",
    "name": "Kurdî (kurmancî)",
    "english": "Kurdish",
-   "size": 246773,
-   "sha256": "01878e701e7f9076e5c8008516d2d5088a56cd23c15442b3fe2e41183a920837",
+   "size": 266020,
+   "sha256": "f8530d52024fd4a78f0064a98d8ae0bfb0a940368eaa97e141f3726fe6c2d2e9",
    "dictionary": false
   },
   {
    "code": "lo",
    "name": "ລາວ",
    "english": "Lao",
-   "size": 907313,
-   "sha256": "41f5dd3be1abad9f7d6f83b2f4d95863ec8aa05b2060ce1a99a7ea8cda319e9f",
+   "size": 907431,
+   "sha256": "cfad836fe932eed066edab2b3827d10f899ff0ba95b2b7cc1e6766d177cada4a",
    "dictionary": true
   },
   {
    "code": "lv",
    "name": "Latviešu",
    "english": "Latvian",
-   "size": 831550,
-   "sha256": "921178f34c8d34e8ad6a186f8777c90088e6d4098e515de6bdf798789be9ce2a",
+   "size": 832526,
+   "sha256": "9562da884c190687f989d259fa6d9e633a16ce828bd5303c3e5b809c305865bc",
    "dictionary": true
   },
   {
    "code": "lt",
    "name": "Lietuvių",
    "english": "Lithuanian",
-   "size": 892616,
-   "sha256": "ac0efc2578b2c455663284505227a59b7891cec8bf9df29038158b6fa75e379c",
+   "size": 893075,
+   "sha256": "86e2314a2d0afbe71d2d94619dd097fd3de9a9f916437d50489ef2a2c8edb46f",
    "dictionary": true
   },
   {
    "code": "dsb",
    "name": "Dolnoserbšćina",
    "english": "Lower Sorbian",
-   "size": 812738,
-   "sha256": "60e8527307c952538a864f3ab8b896faa0dd506e512b65e516421a49825d05a3",
+   "size": 813090,
+   "sha256": "f1d9052d8ab6db912d27179bbd53e668f5860214fd7c7e82313986e79d07c228",
    "dictionary": false
   },
   {
    "code": "lb",
    "name": "Lëtzebuergesch",
    "english": "Luxembourgish",
-   "size": 108300,
-   "sha256": "e0e1a1791354654b1dc175d37bc08892534c2997b4ab66acf58549fdd6c84ee6",
+   "size": 108383,
+   "sha256": "928a53ea5c7b3b3d633653ebaeb9e48d0f9f718053479fa6dc2ffc973563fbb3",
    "dictionary": false
   },
   {
    "code": "mk",
    "name": "Македонски",
    "english": "Macedonian",
-   "size": 308872,
-   "sha256": "e92130c22732aa92d5b3b22117ef93628c9b562c4212ffdd7188e232e3e180be",
+   "size": 308856,
+   "sha256": "0dd6a4e18e33b67243cce7b577ebbcf5a363db1fa8561aaa418257d335eceb0a",
    "dictionary": false
   },
   {
    "code": "mai",
    "name": "मैथिली",
    "english": "Maithili",
-   "size": 224575,
-   "sha256": "6ed2c9e70902e037bf0e0b6c81ad3b9fdbf3e1305f9c584922e6695f18e26a97",
+   "size": 224506,
+   "sha256": "34683ccda286d0f7e8c988b0a11e9d8a9d603b84984aef6a7ff0b7c5cad296e1",
    "dictionary": false
   },
   {
    "code": "ml",
    "name": "മലയാളം",
    "english": "Malayalam",
-   "size": 344400,
-   "sha256": "f849fefe9699ece399670ce54ecb71ea07e7cf6e426b109b267a4c36ad85636a",
+   "size": 344936,
+   "sha256": "8915c84844ed4b3460a9bd299ff820ba71b13ac4023e3e736fd49e189a727702",
    "dictionary": false
   },
   {
    "code": "mni",
    "name": "মৈতৈলোন্",
    "english": "Manipuri",
-   "size": 265120,
-   "sha256": "ac1784845f09fdb603ec7e36f204c91a262e557031785654fa7459dbe96e600d",
+   "size": 265041,
+   "sha256": "e6b99b2703ecb4f8b25c7bb675287cd5d5ac57202637f5efe1ba36dee6cecfe8",
    "dictionary": false
   },
   {
    "code": "mr",
    "name": "मराठी",
    "english": "Marathi",
-   "size": 370143,
-   "sha256": "0834808754d0dec4cb0262b63ccfe18bc8a3faed5dbf31133312b7e12c36a7d0",
+   "size": 370210,
+   "sha256": "34ad655e2292a158675b966c30c7a85c4f9b06af0a07610844de054193962ebd",
    "dictionary": false
   },
   {
    "code": "mn",
    "name": "Монгол",
    "english": "Mongolian",
-   "size": 2116738,
-   "sha256": "38a01282008818e117047d711427bbd6a833ef8d700624e52876a72e55d81472",
+   "size": 2120068,
+   "sha256": "37cd74bdb746aa00247b3aedf5bd009f515bd6a2ce5b78e51b0c7ba2ce938214",
    "dictionary": true
   },
   {
    "code": "ne",
    "name": "नेपाली",
    "english": "Nepali",
-   "size": 657777,
-   "sha256": "99ed55d9d9494a129d96ce1cd7a8db5e9b3228bca295950c8de49ca3c9929669",
+   "size": 657920,
+   "sha256": "dd501401dad522c69af46b72729a819fdecd7a09d9115b1ee40e445ea8fa9e0e",
    "dictionary": true
   },
   {
    "code": "nso",
    "name": "Sesotho sa Leboa",
    "english": "Northern Sotho",
-   "size": 222645,
-   "sha256": "6de59d5b81338b73b70e04ad7334564bc6e84c414cd130f8adf695ba5689f6f7",
+   "size": 222666,
+   "sha256": "3b9bb1390af139c0984fac6a49454968c76d2c864c717166cbbe1aff7a07f81d",
    "dictionary": false
   },
   {
    "code": "nb",
    "name": "Norsk bokmål",
    "english": "Norwegian Bokmål",
-   "size": 3007547,
-   "sha256": "0c48e1a49e4614374b3948a88513075e3fe96828ec44ec8e0b0732d65bc12e62",
+   "size": 3006906,
+   "sha256": "df6d0dce604e7b6f970f0330e41956865111ed6fd2cbd1e31e98da4d20e845cc",
    "dictionary": true
   },
   {
    "code": "nn",
    "name": "Norsk nynorsk",
    "english": "Norwegian Nynorsk",
-   "size": 3009231,
-   "sha256": "2c3dd64808533308e54fab9b530e78009593bf79f04af54ec5753309ab4bacea",
+   "size": 3008797,
+   "sha256": "7cc1be9cf4a4609c8b3092f6bfec7c3017e8e681924bdfc215aeea07d42cef11",
    "dictionary": true
   },
   {
    "code": "oc",
    "name": "Occitan",
    "english": "Occitan",
-   "size": 966037,
-   "sha256": "03fafdd43c278066a94f4273224b08ff6a39d0b241c0768dc0fe5582e0955555",
+   "size": 966858,
+   "sha256": "14cbbfb015a31c0f465162d2164ddcb1dd1530e04da267f7ccc1394eb35c637b",
    "dictionary": true
   },
   {
    "code": "or",
    "name": "ଓଡ଼ିଆ",
    "english": "Odia",
-   "size": 381860,
-   "sha256": "84180d68138dea6c6d1f9d9407b89a28f64edd460348eb57fb0d94417ee9eea7",
+   "size": 381518,
+   "sha256": "4cd2e4761d14aa140604dfed99b6a6bc527f916cc3159bd605f93bafb0d2bdeb",
    "dictionary": false
   },
   {
    "code": "om",
    "name": "Oromoo",
    "english": "Oromo",
-   "size": 329714,
-   "sha256": "ce96e81547c5e53f816beb093d07a67c663e8ffc3f30a8ced91c3a63a5d9392a",
+   "size": 329581,
+   "sha256": "ed0869e7764614ad5565749436cdb09e75369de88a2b2c1c12e73558ae0a7272",
    "dictionary": false
   },
   {
    "code": "fa",
    "name": "فارسی",
    "english": "Persian",
-   "size": 573175,
-   "sha256": "4f627b47fc1c26f10bda5ed0263eb1d693fd4842f413994e2451747a994aa79a",
+   "size": 573932,
+   "sha256": "a52d9f08269f66109b8d45a582aa18452cdf3c8591a933848780e06c52540c42",
    "dictionary": true
   },
   {
    "code": "pl",
    "name": "Polski",
    "english": "Polish",
-   "size": 2665427,
-   "sha256": "fce4640167012b55152053a9f7887b05fb974ad1e274832b92c43ffefc07e45d",
+   "size": 2665664,
+   "sha256": "9f508d0900103f908448ed4b1f3096c2a19d06e7a117dfe90cf93b33fe83306b",
    "dictionary": true
   },
   {
    "code": "pt",
    "name": "Português",
    "english": "Portuguese",
-   "size": 1951300,
-   "sha256": "4ccd70feaa11ae9e6a25f72d02d641e31e8090a8bde73a13d4a17517b215f41a",
+   "size": 1951489,
+   "sha256": "1c5e699934db4549140c2360ad1d853e613fd9186fb5b1a1950b3071498fbcb6",
    "dictionary": true
   },
   {
    "code": "pt-BR",
    "name": "Português (Brasil)",
    "english": "Portuguese (Brazil)",
-   "size": 3757268,
-   "sha256": "f68a6c6da6b7c83b5c16d2f3e2c95a27d410143f798acccf27c22bfaac01680f",
+   "size": 3757956,
+   "sha256": "881c153583b449e586d74ad3f4eecff3f25c0f1be65e28051405d1c1833fbce6",
    "dictionary": true
   },
   {
    "code": "pa-IN",
    "name": "ਪੰਜਾਬੀ (ਗੁਰਮੁਖੀ, ਭਾਰਤ)",
    "english": "Punjabi (Gurmukhi, India)",
-   "size": 430487,
-   "sha256": "de6963e7e065217f88215e56283b5ac526a9a4e7e25634f93a52544731789081",
+   "size": 430176,
+   "sha256": "0996f140515c3d0610c0713d676fa7708d7ed31a318eba73d85a1400108d608b",
    "dictionary": false
   },
   {
    "code": "ro",
    "name": "Română",
    "english": "Romanian",
-   "size": 2179369,
-   "sha256": "900560998be282e15a580b04e2be47661dbf700969d10aa2793034a42b49ead2",
+   "size": 2178924,
+   "sha256": "303a56f078fb47e184f0a44b96ba9781c96f3dd00c71b23083fc48b5684810d0",
    "dictionary": true
   },
   {
    "code": "ru",
    "name": "Русский",
    "english": "Russian",
-   "size": 1728158,
-   "sha256": "7509c0a62ebce8a2b3c45db4ea5e3d7c3f619774b4eed9a794cf66f827ede738",
+   "size": 1728624,
+   "sha256": "f52d219b576b4abff66a5e85f08a03601b920d3c82207f468d28b68351909a71",
    "dictionary": true
   },
   {
    "code": "sa-IN",
    "name": "संस्कृत भाषा (भारतः)",
    "english": "Sanskrit (India)",
-   "size": 294731,
-   "sha256": "a950f05a690ec676c349a169265304a445eb5c4fcad6f53d95850ab75a5b900f",
+   "size": 294659,
+   "sha256": "b039b1817990e5a36cac7425364fb8ca2d38e162e5e7003ae847b2f9b28f2ab7",
    "dictionary": false
   },
   {
    "code": "sat",
    "name": "ᱥᱟᱱᱛᱟᱲᱤ",
    "english": "Santali",
-   "size": 334203,
-   "sha256": "1e41714a0493e4e145b9763fcde014a0cba5826b58dce224122ac94a2cd3b288",
+   "size": 334491,
+   "sha256": "89686714f497ba4a4b663b4608f41bfc3eca0f2d348cb2f47480c030e529fa84",
    "dictionary": false
   },
   {
    "code": "sat-Olck",
    "name": "ᱥᱟᱱᱛᱟᱲᱤ (ᱚᱞ ᱪᱤᱠᱤ)",
    "english": "Santali (Ol Chiki)",
-   "size": 834819,
-   "sha256": "8e2484c073e07a9c855cd7e0936df32f9776d20ca1950dc379c9a61b18137e12",
+   "size": 834766,
+   "sha256": "13f8f25af640c886c8bbc98db2d8b51f44287053b691fccc2026d367d7c0c6fe",
    "dictionary": false
   },
   {
    "code": "gd",
    "name": "Gàidhlig",
    "english": "Scottish Gaelic",
-   "size": 1306478,
-   "sha256": "458b47b629ae4409f273d884481f7f66600a3f1a994e7135b0579915fc55297c",
+   "size": 1306949,
+   "sha256": "a0ab67c8ea39a78b543aa62d9f5e6c204dceac220c46932cbdd6bd397e0949b3",
    "dictionary": true
   },
   {
    "code": "sr",
    "name": "Српски",
    "english": "Serbian",
-   "size": 2252823,
-   "sha256": "4ab8511eb23a218f7e752b53c17b4b00c499882c03ef465818fba8f2022e6035",
+   "size": 2252374,
+   "sha256": "5cdeab7ff14f4d95d47b24247e339fd6d8893a9cc1071e8ed58dc4edbcd2d560",
    "dictionary": true
   },
   {
    "code": "sr-Latn",
    "name": "Srpski (latinica)",
    "english": "Serbian (Latin)",
-   "size": 1858337,
-   "sha256": "c65e7bf22fba596839f7e7d3c61f84d9a0d6f793c5ac2ea9851fd79e256001ef",
+   "size": 1857587,
+   "sha256": "5f32a27619b85e09900466cb79a7692bfec3df336f33bafe3df99dd28af13836",
    "dictionary": true
   },
   {
    "code": "sid",
    "name": "Sidaamu Afo",
    "english": "Sidamo",
-   "size": 352616,
-   "sha256": "d4dd6a72215d1de3603d2d68eed22501a0bb82f4193171d6eca098d8b230c5be",
+   "size": 352669,
+   "sha256": "96ce68185959c757ddf4d7c33135dd02df1be163dcd370960889ccfac7395739",
    "dictionary": false
   },
   {
    "code": "szl",
    "name": "Ślōnski",
    "english": "Silesian",
-   "size": 487786,
-   "sha256": "196cb1fd1185dabff80d673b8ec484419801b5ba79ff7a3f845b4fe96d9c742e",
+   "size": 487604,
+   "sha256": "da45016262522d7519d0561f6053bab21b448ac293eeda2a21ecdf912c1e8e1b",
    "dictionary": false
   },
   {
    "code": "sd",
    "name": "سنڌي",
    "english": "Sindhi",
-   "size": 287280,
-   "sha256": "3f023a778bce8277568bec44fef30e232294fa15f57653c199ee9928dea3f9c7",
+   "size": 287417,
+   "sha256": "bcae5d2fb90b945eaa14d82bb06ad3beaf530925b3c393b85ffd6877e855a9a8",
    "dictionary": false
   },
   {
    "code": "si",
    "name": "සිංහල",
    "english": "Sinhala",
-   "size": 532323,
-   "sha256": "4ac7936172442089b629ce346dcbee1b712c5dfe8835f73a138dcddb12e93855",
+   "size": 532544,
+   "sha256": "14c553d21a9677ac17229872663878f6dd12abe7fd546b9192a33aa34f2c0f0a",
    "dictionary": true
   },
   {
    "code": "sk",
    "name": "Slovenčina",
    "english": "Slovak",
-   "size": 1681448,
-   "sha256": "b08ef8fc654304a0d8990a2c6f706ec23669e716495ea67d914d1b3443ca283d",
+   "size": 1681152,
+   "sha256": "2a715e481b83b9ca0350adac7773c9d87d1bae229947786d21d94c38bbc3c728",
    "dictionary": true
   },
   {
    "code": "sl",
    "name": "Slovenščina",
    "english": "Slovenian",
-   "size": 2189893,
-   "sha256": "f6ec98a7d23e39f6d7a7fe41df05201d93767b47146128529f88bfc936e33a82",
+   "size": 2189511,
+   "sha256": "398f72f3769cf28df8b552ae2ddcddbb3dc8d2dde477d3169c874ea20d44b73f",
    "dictionary": true
   },
   {
    "code": "nr",
    "name": "IsiNdebele",
    "english": "South Ndebele",
-   "size": 199056,
-   "sha256": "2d4034c38bda16e26d1fe8d2a6f5f0e642974565efc5b697d2e3ee4277b3e364",
+   "size": 198998,
+   "sha256": "ac88866cf7b0c6ae671a06a2dc500b146cdfb3be0b343aaad58ffc9fce256bb1",
    "dictionary": false
   },
   {
    "code": "st",
    "name": "Sesotho",
    "english": "Southern Sotho",
-   "size": 198436,
-   "sha256": "106e9885365395e0c38554619ef0233df6a8b0694275e5f12e3498a9534c8e8c",
+   "size": 198422,
+   "sha256": "ecca4fe053f0fe6678d7f226eb7248120da77a64359342a31d07b21357be0282",
    "dictionary": false
   },
   {
    "code": "es",
    "name": "Español",
    "english": "Spanish",
-   "size": 1781751,
-   "sha256": "24722922478d59982379b061a7005d990eea3912f7731d7ba5b09c053b9ca345",
+   "size": 1783280,
+   "sha256": "099daebf3ec9be9f72a752a5cac116e25c8fa1998b4c421a00a806173e5df5fb",
    "dictionary": true
   },
   {
    "code": "sw-TZ",
    "name": "Kiswahili (Tanzania)",
    "english": "Swahili (Tanzania)",
-   "size": 220853,
-   "sha256": "3844f366c13bc31613e3739b2d21e94f50b123c5ae115dad264e1cf5e8e7ae30",
+   "size": 221439,
+   "sha256": "c7a946b2f82786b6eac62db14dbc422b5c2255c60d093afdc28a55aa7e7d751c",
    "dictionary": false
   },
   {
    "code": "ss",
    "name": "SiSwati",
    "english": "Swati",
-   "size": 202517,
-   "sha256": "c60f2fb948291c79a28822e250ef591ccdfd3dbcf19af8bcf0937ebda36b8c71",
+   "size": 202489,
+   "sha256": "f800a3f6ef43142eda1bafe03698f72541f27e1dd5383f1978236bd9f4bfd34f",
    "dictionary": false
   },
   {
    "code": "sv",
    "name": "Svenska",
    "english": "Swedish",
-   "size": 1746757,
-   "sha256": "90ec39aaa487ab74f3ebd209cc3ebd781be905c25d305bd47eeac2e8a7b7e5f5",
+   "size": 1746881,
+   "sha256": "b7399e73687fe27e5f1d44f3477b01dc8111a3569640c6c06f69312002b2e5cf",
    "dictionary": true
   },
   {
    "code": "tg",
    "name": "Тоҷикӣ",
    "english": "Tajik",
-   "size": 258992,
-   "sha256": "535aa61ff1b996f99b40879950dcd0f23b5f0ff94b26e01d2701df8dfad2b38c",
+   "size": 259158,
+   "sha256": "a67ba35a75d2d1b3cf5b9d134dd082a7320d3373a97195c271ba7dccc66ecf1c",
    "dictionary": false
   },
   {
    "code": "ta",
    "name": "தமிழ்",
    "english": "Tamil",
-   "size": 472868,
-   "sha256": "98442b73058fefc5b217c1927a7f7f54f7c3ce22f51f85cff8278ea52bb194bf",
+   "size": 473049,
+   "sha256": "7ae9ccee2795b007a01719bb3fce57a9851da33f6953927702e11de45edc342f",
    "dictionary": false
   },
   {
    "code": "tt",
    "name": "Татар",
    "english": "Tatar",
-   "size": 126899,
-   "sha256": "8f06a996fff48b26464abba20142d69bbae9f869b005b0eca3048cac31ae7a38",
+   "size": 127250,
+   "sha256": "1145b19379867a797fd021b959ab3ba411364ebf0b6a40b9b817f19706c4bbb3",
    "dictionary": false
   },
   {
    "code": "te",
    "name": "తెలుగు",
    "english": "Telugu",
-   "size": 775159,
-   "sha256": "b3762a062e9066fb517631482403aff4bee3d3abbcf34c0f6dcefa8e4633fd81",
+   "size": 775733,
+   "sha256": "344a617b4a7acd6a7c0905e184ee1c34f2ebd2cc45f9ce86754377b7795710dd",
    "dictionary": true
   },
   {
    "code": "th",
    "name": "ไทย",
    "english": "Thai",
-   "size": 972141,
-   "sha256": "3c0fe8a03ef40f54736e41ddfc79b39eba4d113a091500e401496ca2916b7d2a",
+   "size": 972808,
+   "sha256": "6b4166e6ef0370ff67a1a53c12cff90de0c15245602a047a5cebcf1bb9547d25",
    "dictionary": true
   },
   {
    "code": "bo",
    "name": "བོད་སྐད་",
    "english": "Tibetan",
-   "size": 304371,
-   "sha256": "330760d9b3c0c94db1a13bd71c1d92516747d71093b143129105431df8457920",
+   "size": 304410,
+   "sha256": "90c8467744cc8a5ca2a341c5280b7be7a6af5a77758f3d35122fc2d0181f5c3b",
    "dictionary": true
   },
   {
    "code": "ts",
    "name": "Xitsonga",
    "english": "Tsonga",
-   "size": 197671,
-   "sha256": "8d9115c1ea7d3142d80813996fadc193f834df0b4e32d9c63d8180cb8df09430",
+   "size": 197720,
+   "sha256": "f7934ff39528cf91f08307c91c2c55ab9e1f8b2265a0c5316fee732423711d09",
    "dictionary": false
   },
   {
    "code": "tn",
    "name": "Setswana",
    "english": "Tswana",
-   "size": 184425,
-   "sha256": "5665c59ea5c3b169160ea8f67ce15734b47d2ae711e298446a83a8d6bcf905b1",
+   "size": 184667,
+   "sha256": "104792184b70cece0ea9f5571842c28aabc006f3f2afb7af50e7968d1804c08c",
    "dictionary": false
   },
   {
    "code": "tr",
    "name": "Türkçe",
    "english": "Turkish",
-   "size": 6199824,
-   "sha256": "339aa456ad2283eb70d5455c3b5f6057853cbf15f9512806bba502454ce28f62",
+   "size": 6209970,
+   "sha256": "aa9163b69feb3eb00080bf5c84d52f105617168bd20e16bf7585b41c7695b0a9",
    "dictionary": true
   },
   {
    "code": "uk",
    "name": "Українська",
    "english": "Ukrainian",
-   "size": 2291755,
-   "sha256": "39d9bebeceb97d329c8e375d8657af918f67b703b8f6dc082c90e5ca03e7ee26",
+   "size": 2293534,
+   "sha256": "ce82479b7cb1983808595aea9fa82bf21771b20059db1c019b2ef68cd8c0be1e",
    "dictionary": true
   },
   {
    "code": "hsb",
    "name": "Hornjoserbšćina",
    "english": "Upper Sorbian",
-   "size": 811386,
-   "sha256": "fa0aff954b32932cbe63f8cd0dd2bbcf5f9132e4f659e14b2893671d4142236c",
+   "size": 811427,
+   "sha256": "908ea3d3f0b79420fe05b00ed6d18619ffefe46aeda9148c032d6035d924f977",
    "dictionary": false
   },
   {
    "code": "ug",
    "name": "ئۇيغۇرچە",
    "english": "Uyghur",
-   "size": 370131,
-   "sha256": "9515cc447c8e42170642a843a677d92dfb0b9bb19f0340f7112a46c2b835f283",
+   "size": 370058,
+   "sha256": "467f7f6471dbd4b2734fafe2082fe26d39b5f1f833789cc717c55cceecc792e4",
    "dictionary": false
   },
   {
    "code": "uz",
    "name": "O‘zbek",
    "english": "Uzbek",
-   "size": 212850,
-   "sha256": "7c50cf9bb536576153104797ca33126e6da9964a59bc273f41b7e31e83fe56a6",
+   "size": 213256,
+   "sha256": "6c5ebbde823a79160ce6b1c3376725028a5af1423091cdff8e167f9b20f9c730",
    "dictionary": false
   },
   {
    "code": "ve",
    "name": "Tshivenḓa",
    "english": "Venda",
-   "size": 200027,
-   "sha256": "3d3adc6a552337a581fd74099a3ad202fa62b4ea7a873eb656074325c92df249",
+   "size": 199809,
+   "sha256": "3b4c15dc36f44a903c3d24b4dad2b53736373156ca3500e7fa9fd561c15ebeee",
    "dictionary": false
   },
   {
    "code": "vec",
    "name": "Veneto",
    "english": "Venetian",
-   "size": 499231,
-   "sha256": "f3e0b32abbb266d1afe6f886cf04c2f56ba9b31dc4bd09f75210904150f2d4e4",
+   "size": 499393,
+   "sha256": "beb8361d73915a0a338bb1b7f7d61d01fa641633dceca8eb8dd751752b74ddbd",
    "dictionary": false
   },
   {
    "code": "vi",
    "name": "Tiếng Việt",
    "english": "Vietnamese",
-   "size": 546887,
-   "sha256": "4a53351662b4c0f11e71eaa8e56636946269294775658288397b38368d6b32ca",
+   "size": 547619,
+   "sha256": "ba48ea69af1ae0d516880abc6be6bb152a4b3c6f2dc4360aa0b6156564c92638",
    "dictionary": true
   },
   {
    "code": "cy",
    "name": "Cymraeg",
    "english": "Welsh",
-   "size": 802154,
-   "sha256": "59921b0e5fcc478020ad22ead323c2972e9c7cdf47fed3e19dff35d76c38c1be",
+   "size": 801980,
+   "sha256": "6b170399d907837f9f88b1751b492323c5e0f7b6893f8d3c1fadd5c35e9d7070",
    "dictionary": false
   },
   {
    "code": "fy",
    "name": "Frysk",
    "english": "Western Frisian",
-   "size": 619863,
-   "sha256": "0826b74ad91e16061dc371e5ad9ee31ce2491c395870f2cf7cc73ceaf3192e97",
+   "size": 619792,
+   "sha256": "9265d261d914650837da3a52c5ea1941ebc1bc7fe26f5a91dd67106a6e4cc9ef",
    "dictionary": false
   },
   {
    "code": "xh",
    "name": "IsiXhosa",
    "english": "Xhosa",
-   "size": 204361,
-   "sha256": "1e3ebf8a1be487b393f05b1a380c78a475e5c7de2f8ddbb62273e59cbe2bbe93",
+   "size": 204019,
+   "sha256": "d5869bee6d6791b64ecbf68e7820081b649180f4d7c022e448d32558cf896eda",
    "dictionary": false
   },
   {
    "code": "zu",
    "name": "IsiZulu",
    "english": "Zulu",
-   "size": 222808,
-   "sha256": "9b8fe7e618b9719a22eb97304698e1bbcd15c455595ffbc4dcd0586a25507e3c",
+   "size": 223017,
+   "sha256": "55f01df6ac65e5bfc54575464f5334069629f7cfd585cc79519311c2fcee27ef",
    "dictionary": true
   }
  ]

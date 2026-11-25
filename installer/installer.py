@@ -21,12 +21,15 @@ try:
 except ImportError:  # run from the command line for testing
     pyotherside = None
 
-VERSION = "26.8.2"
-BUILD = VERSION + ".2"
+VERSION = "26.8.3"
+BUILD = "26.8.3.1"
 # The archive keeps every release; the stable folder drops a release when the next one arrives.
 URL = ("https://downloadarchive.documentfoundation.org/libreoffice/old/%s/deb/aarch64/"
        "LibreOffice_%s_Linux_aarch64_deb.tar.gz" % (BUILD, BUILD))
-SHA256 = "54a780b666fcda7510c2eebe85265b71dd209db280fc16882fca5589015ca505"
+SHA256 = "378a0766e4a815a5a96fb7473f346d072e23e3cc28606bdc8cd6f834cfaa14db"
+# Installs made before the version was recorded (app 0.4.10 and older) are all this one.
+UNRECORDED = "26.8.2"
+VERSION_FILE = "version"
 DOWNLOAD_MB = 200
 # Download, unpacked copy and some slack.
 NEEDED_MB = 1200
@@ -51,11 +54,34 @@ def _data():
     return os.environ.get("OFFICE_DATA") or os.path.expanduser("~/.local/share/libreoffice.juujbyg")
 
 
-def installed(data=None):
-    opt = os.path.join(data or _data(), "libreoffice", "opt")
+def _has_program(root):
+    opt = os.path.join(root, "opt")
     if not os.path.isdir(opt):
         return False
     return any(os.path.exists(os.path.join(opt, n, "program", "soffice.bin")) for n in os.listdir(opt))
+
+
+def installed(data=None):
+    return _has_program(os.path.join(data or _data(), "libreoffice"))
+
+
+def installed_version(data=None):
+    """The LibreOffice version installed, or None."""
+    data = data or _data()
+    if not installed(data):
+        return None
+    try:
+        with open(os.path.join(data, "libreoffice", VERSION_FILE), encoding="utf-8") as f:
+            return f.read().strip() or UNRECORDED
+    except OSError:
+        return UNRECORDED
+
+
+def outdated(data=None):
+    """True when an older LibreOffice than this app ships is installed. Its bug and security fixes
+    reach the phone only through update()."""
+    version = installed_version(data)
+    return version is not None and version != VERSION
 
 
 def _download(target, url=None, sha256=None, step="download", size=None):
@@ -132,7 +158,9 @@ def install(data=None):
                     print("language pack %s: %s" % (code, e))
 
 
-def _install(data):
+def _install(data, languages=()):
+    """Download and unpack LibreOffice, add the given language packs to it, and only then put it in
+    place of <data>/libreoffice, so a failure at any step leaves the old one as it was."""
     # Leftovers of an attempt that was cancelled (the screen closed) or cut short.
     for name in os.listdir(data):
         if name.startswith("install-"):
@@ -150,13 +178,30 @@ def _install(data):
             for index, member in enumerate(debs):
                 _unpack_deb(archive.extractfile(member), unpacked)
                 _send("progress", "unpack", (index + 1) / len(debs))
-        if not installed(work):
+        os.remove(download)
+        if not _has_program(unpacked):
             raise InstallError("The download is missing LibreOffice's program.")
+        for code in languages:
+            _add_pack(unpacked, code, work)
+        with open(os.path.join(unpacked, VERSION_FILE), "w", encoding="utf-8") as f:
+            f.write(VERSION + "\n")
         target = os.path.join(data, "libreoffice")
-        shutil.rmtree(target, ignore_errors=True)
+        if os.path.exists(target):
+            os.rename(target, os.path.join(work, "old"))
         os.rename(unpacked, target)
     finally:
         shutil.rmtree(work, ignore_errors=True)
+
+
+def update(data=None):
+    """Replace an older LibreOffice with this app's version, keeping the language packs the user
+    added. Call it only while LibreOffice isn't running (the start screen checks)."""
+    data = data or _data()
+    with open(os.path.join(data, ".install.lock"), "w") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        if not outdated(data):
+            return
+        _install(data, installed_languages(data))
 
 
 # Language packs: menus, help texts and spelling dictionaries for other languages, published by TDF
@@ -180,12 +225,12 @@ def _pack(code):
     raise InstallError("There is no LibreOffice language pack for \"%s\"." % code)
 
 
-def _records(data):
-    return os.path.join(data, "libreoffice", "languages")
+def _records(root):
+    return os.path.join(root, "languages")
 
 
 def installed_languages(data=None):
-    folder = _records(data or _data())
+    folder = _records(os.path.join(data or _data(), "libreoffice"))
     if not os.path.isdir(folder):
         return []
     return sorted(n[:-len(".files")] for n in os.listdir(folder) if n.endswith(".files"))
@@ -211,10 +256,19 @@ def phone_language(environ=None):
 
 
 def _install_language(data, code):
-    entry = _pack(code)
     if code in installed_languages(data):
         return
     work = tempfile.mkdtemp(prefix="install-language-", dir=data)
+    try:
+        _add_pack(os.path.join(data, "libreoffice"), code, work)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
+
+def _add_pack(root, code, work):
+    """Download language pack <code> into work and move its files into the LibreOffice folder root."""
+    entry = _pack(code)
+    work = tempfile.mkdtemp(prefix="language-", dir=work)
     try:
         download = os.path.join(work, "pack.tar.gz")
         _download(download, LANGUAGE_URL % code, entry["sha256"], "language", entry["size"])
@@ -225,7 +279,6 @@ def _install_language(data, code):
                     _unpack_deb(archive.extractfile(member), unpacked)
         # Move the pack's files into LibreOffice's folder. Files that are already there (such as a
         # dictionary that LibreOffice itself ships) belong to LibreOffice and stay out of the list.
-        root = os.path.join(data, "libreoffice")
         added = []
         for folder, _dirs, files in os.walk(unpacked):
             for name in files:
@@ -237,8 +290,8 @@ def _install_language(data, code):
                 os.makedirs(os.path.dirname(target), exist_ok=True)
                 os.rename(source, target)
                 added.append(relative)
-        os.makedirs(_records(data), exist_ok=True)
-        record = os.path.join(_records(data), code + ".files")
+        os.makedirs(_records(root), exist_ok=True)
+        record = os.path.join(_records(root), code + ".files")
         with open(record + ".new", "w", encoding="utf-8") as f:
             f.write("".join(path + "\n" for path in sorted(added)))
         os.rename(record + ".new", record)
@@ -255,12 +308,15 @@ def install_language(code, data=None):
         fcntl.flock(lock, fcntl.LOCK_EX)
         if not installed(data):
             raise InstallError("Install LibreOffice first.")
+        # Packs are made for one build, and languages.json lists this app's build.
+        if outdated(data):
+            raise InstallError("Update LibreOffice first, on the start screen.")
         _install_language(data, code)
 
 
 def remove_language(code, data=None):
     data = data or _data()
-    record = os.path.join(_records(data), code + ".files")
+    record = os.path.join(_records(os.path.join(data, "libreoffice")), code + ".files")
     if code not in installed_languages(data):
         return
     root = os.path.realpath(os.path.join(data, "libreoffice"))

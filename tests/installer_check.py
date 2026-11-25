@@ -123,6 +123,39 @@ installer.install(data)
 assert installer.installed_languages(data) == ["xx"]
 print("ok first install adds the phone's language")
 
+# Updates -----------------------------------------------------------------------------------------
+data = os.path.join(tmp, "first")
+version_file = os.path.join(data, "libreoffice", installer.VERSION_FILE)
+assert installer.installed_version(data) == installer.VERSION and not installer.outdated(data)
+assert installer.installed_version(os.path.join(tmp, "nothing")) is None and not installer.outdated(os.path.join(tmp, "nothing"))
+os.remove(version_file)  # as installed by 0.4.10
+assert installer.installed_version(data) == installer.UNRECORDED and installer.outdated(data)
+try:
+    installer.install_language("xx", data); raise SystemExit("pack for the new build added to the old one")
+except installer.InstallError as e:
+    assert "Update" in str(e)
+print("ok old install is outdated; packs wait for the update")
+
+old_program = os.path.join(data, "libreoffice/opt/libreoffice26.8/program/soffice.bin")
+open(old_program, "w").write("old")
+installer.SHA256 = "0" * 64
+try:
+    installer.update(data); raise SystemExit("bad update hash accepted")
+except installer.InstallError:
+    pass
+assert open(old_program).read() == "old" and installer.installed_languages(data) == ["xx"] and installer.outdated(data)
+assert sorted(os.listdir(data)) == [".install.lock", "libreoffice"], os.listdir(data)
+print("ok failed update keeps the old LibreOffice and its languages")
+
+installer.SHA256 = hashlib.sha256(open(archive, "rb").read()).hexdigest()
+installer.update(data)
+assert open(old_program).read() == "#!/bin/sh\n", "new program"
+assert installer.installed_languages(data) == ["xx"] and os.path.exists(data + "/libreoffice/opt/libreoffice26.8/program/resource/xx/LC_MESSAGES/sw.mo")
+assert not installer.outdated(data) and open(version_file).read().strip() == installer.VERSION
+assert sorted(os.listdir(data)) == [".install.lock", "libreoffice"], os.listdir(data)
+downloads.clear(); installer.update(data); assert not downloads, "up to date: nothing downloaded"
+print("ok update replaces LibreOffice, keeps the languages, records the version")
+
 installer.catalog = real_catalog
 codes = {e["code"] for e in installer.catalog()}
 assert len(codes) == 122 and "qtz" not in codes and {"es", "de", "fr", "pt-BR", "en-GB"} <= codes

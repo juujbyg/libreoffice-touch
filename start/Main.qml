@@ -25,6 +25,12 @@ MainView {
     property var languagesPage: null // the Languages page, while it's open
     property var certificatesPage: null // the Certificates page, while it's open
     property bool ready: false
+    property var office: null        // hub.office_state(): installed version and whether it's old
+    property bool updating: false
+    property real updateFraction: 0
+    property string updateStep: ''
+    property string updateError: ''
+    readonly property bool showUpdate: !exportTo && (updating || (office !== null && office.outdated))
 
     readonly property var apps: [
         { kind: 'writer', label: 'Writer' }, { kind: 'calc', label: 'Calc' },
@@ -34,6 +40,7 @@ MainView {
 
     function refresh() {
         if (!ready) return
+        if (!updating) py.call('hub.office_state', [], function (state) { root.office = state })
         py.call('hub.documents', [], function (list) {
             documentModel.clear()
             for (var i = 0; i < list.length; ++i) documentModel.append(list[i])
@@ -96,6 +103,14 @@ MainView {
         return certificatesPage
     }
 
+    function updateOffice() {
+        updateError = ''
+        updateFraction = 0
+        updateStep = 'download'
+        updating = true
+        py.call('hub.update_office', [])
+    }
+
     function sizeText(bytes) {
         if (bytes < 1024) return bytes + ' B'
         if (bytes < 1048576) return Math.round(bytes / 1024) + ' KB'
@@ -110,7 +125,17 @@ MainView {
                 if (root.languagesPage) root.languagesPage.finished(code, state, message)
             })
             setHandler('progress', function (step, fraction) {
-                if (root.languagesPage && step === 'language') root.languagesPage.fraction = fraction
+                if (root.updating) {
+                    root.updateStep = step
+                    root.updateFraction = fraction
+                } else if (root.languagesPage && step === 'language') {
+                    root.languagesPage.fraction = fraction
+                }
+            })
+            setHandler('update', function (state, message) {
+                root.updating = false
+                root.updateError = state === 'failed' ? message : ''
+                root.refresh()
             })
             setHandler('certificate', function (state, message) {
                 if (root.certificatesPage && stack.currentPage === root.certificatesPage)
@@ -193,9 +218,76 @@ MainView {
             ]
         }
 
+        Item {
+            id: updateArea
+            anchors { top: header.bottom; left: parent.left; right: parent.right }
+            height: root.showUpdate ? updateCard.height + units.gu(2) : 0
+            visible: root.showUpdate
+            clip: true
+
+            // An older LibreOffice than this app ships: its fixes arrive only by updating it here.
+            Rectangle {
+                id: updateCard
+                x: units.gu(2)
+                y: units.gu(2)
+                width: parent.width - units.gu(4)
+                height: updateColumn.height + units.gu(3)
+                radius: units.gu(1.5)
+                color: '#fff4dc'
+                border.color: '#e8c46a'
+
+                Column {
+                    id: updateColumn
+                    x: units.gu(1.5)
+                    y: units.gu(1.5)
+                    width: parent.width - units.gu(3)
+                    spacing: units.gu(1)
+
+                    Label {
+                        width: parent.width
+                        wrapMode: Text.WordWrap
+                        font.weight: Font.Medium
+                        color: '#1f2430'
+                        text: root.office ? 'Update LibreOffice to ' + root.office.latest : 'Update LibreOffice'
+                    }
+                    Label {
+                        width: parent.width
+                        wrapMode: Text.WordWrap
+                        color: '#3a3f4b'
+                        text: root.updating
+                              ? (root.updateStep === 'unpack' ? 'Unpacking… ' : root.updateStep === 'language' ? 'Adding your languages… '
+                                 : 'Downloading… ') + Math.round(root.updateFraction * 100) + '%'
+                              : root.office ? 'Version ' + root.office.version + ' is installed. The new one has bug and security fixes. '
+                                              + 'About ' + root.office.size + ' MB download; your documents, settings and languages stay.'
+                              : ''
+                    }
+                    ProgressBar {
+                        width: parent.width
+                        visible: root.updating
+                        minimumValue: 0
+                        maximumValue: 1
+                        value: root.updateFraction
+                    }
+                    Label {
+                        width: parent.width
+                        wrapMode: Text.WordWrap
+                        visible: root.updateError !== ''
+                        color: theme.palette.normal.negative
+                        text: root.updateError
+                    }
+                    Button {
+                        text: 'Update'
+                        visible: !root.updating
+                        color: theme.palette.normal.positive
+                        onClicked: root.updateOffice()
+                    }
+                }
+            }
+        }
+
         ListView {
             id: list
-            anchors { top: header.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+            anchors { top: updateArea.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
             clip: true
             model: ListModel { id: documentModel }
 

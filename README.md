@@ -10,10 +10,11 @@ trademarks. The LibreOffice program is installed unmodified, exactly as The Docu
 ## How it works
 
 - **LibreOffice isn't bundled.** The click is under 100 KB. On first launch, a screen offers to download
-  the official LibreOffice 26.8.2 for Linux aarch64 from The Document Foundation's archive. The download is
+  the official LibreOffice 26.8.3 for Linux aarch64 from The Document Foundation's archive. The download is
   about 200 MB and takes about 730 MB once installed. It's checked against a fixed SHA-256 and unpacked
   into `~/.local/share/libreoffice.juujbyg/` (`installer/`). Nothing is installed system-wide and no root is
-  needed. Deleting the app's data removes LibreOffice again.
+  needed. Deleting the app's data removes LibreOffice again. When an app update ships a newer
+  LibreOffice, the start screen offers Update; it keeps documents, settings and added languages.
 - **Native on Lomiri.** LibreOffice runs with its GTK3 interface straight on Mir's Wayland. No Libertine
   container or X server is involved.
 - **Phone-sized interface** (`bin/office`):
@@ -77,6 +78,24 @@ The sandbox doesn't allow `/tmp`, dconf or programs from `/usr/bin`. So the laun
 built-ins and a small bundled helper (`native/office-util.c`), and the shim moves LibreOffice's
 single-instance socket into the app's runtime folder.
 
+## Safety
+
+Documents come from anywhere, so LibreOffice runs on a short leash:
+- **No internet for LibreOffice.** Before `soffice.bin` starts, the shim (`native/offline.c`) installs a
+  seccomp filter, and the kernel refuses every internet socket for LibreOffice and anything it starts.
+  A document can't fetch remote images or stylesheets, call a web service, or reach devices on your
+  network, so it can't tell its sender that you opened it. Without this, an HTML file's remote stylesheet
+  was fetched even with the settings below. Wayland, D-Bus, the keyboard and the clipboard use local
+  sockets and keep working. Downloads (LibreOffice, languages) are done by the start screen, a separate
+  process. If the kernel can't install the filter, `last.log` says so and the settings below still apply.
+- **Document macros don't run.** Macro security is Very High with no trusted locations, so macros inside
+  documents never run. The app's own zoom macro lives in the profile and isn't affected.
+- **Links from untrusted documents are blocked** (`BlockUntrustedRefererLinks`).
+- Older profiles get these settings once, on the first start of 0.5.0. If you change them yourself in
+  Tools > Options > Security, your choice is kept.
+- LibreOffice and every language pack are TDF's own builds, pinned by SHA-256 after checking TDF's GPG
+  signature, and the app runs inside its AppArmor confinement.
+
 ## Settings
 
 Environment variables for `bin/office`:
@@ -84,6 +103,7 @@ Environment variables for `bin/office`:
 - `LO_TEXT_SCALE`: text size in menus and dialogs (default 1.8).
 - `LO_GTK_THEME`: the GTK theme.
 - `LO_SHIM_DEBUG=1`: logs the dialog shim's decisions to `~/.cache/libreoffice.juujbyg/last.log`.
+- `LO_SHIM_ALLOW_NETWORK=1`: leaves LibreOffice's network open, for testing the settings alone.
 - `LO_SHIM_IM_TRACE=1`, or a file `~/.cache/libreoffice.juujbyg/im-trace`: logs every keyboard call there.
 
 ## Building

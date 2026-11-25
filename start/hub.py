@@ -312,3 +312,28 @@ def remove_certificate(cert_id):
         return "" if certs.remove_certificate(DATA, cert_id) else "That certificate is already gone."
     except certs.CertError as e:
         return str(e)
+
+
+# LibreOffice updates ----------------------------------------------------------------------------
+
+def office_state():
+    """What the start screen shows about the installed LibreOffice."""
+    return {"installed": installer.installed(DATA), "version": installer.installed_version(DATA) or "",
+            "latest": installer.VERSION, "outdated": installer.outdated(DATA), "size": installer.DOWNLOAD_MB}
+
+
+def update_office():
+    """Bring LibreOffice up to this app's version, on a thread: replies with an "update" event."""
+    if office_running():
+        _send("update", "failed", "Close LibreOffice first: swipe its windows away, then try again.")
+        return
+
+    def run():
+        try:
+            installer.update(DATA)
+            _send("update", "done", "")
+        except installer.InstallError as e:
+            _send("update", "failed", str(e))
+        except Exception as e:  # noqa: BLE001  anything unexpected still reaches the screen
+            _send("update", "failed", "Something went wrong: %s" % e)
+    threading.Thread(target=run, daemon=True).start()
